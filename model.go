@@ -6,9 +6,9 @@ import (
 
 type TaskModel struct {
 	gorm.Model
-	Name     string `gorm:"uniqueIndex"`
+	Name     string
 	Schedule string
 	Message  string
-	Hash     string
-	Active   bool // dùng để tạm dừng chạy task nếu muốn
+	Hash     string `gorm:"uniqueIndex"`
+	Active   bool   // dùng để tạm dừng chạy task nếu muốn
 }
