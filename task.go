@@ -5,12 +5,14 @@ import (
 	"log"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
 
 type Task struct {
 	ID       cron.EntryID
+	Hash     string
 	Name     string
 	Schedule string
 	Message  string
@@ -41,7 +43,7 @@ func (tm *TaskManager) LoadTasksFromDB() error {
 
 	for _, t := range taskModels {
 		log.Printf("Loading task from DB: %s, Schedule: %s, Message: %s", t.Name, t.Schedule, t.Message)
-		_, err := tm.registerTask(t.Name, t.Schedule, t.Message)
+		_, err := tm.registerTask(t.Hash, t.Name, t.Schedule, t.Message)
 		if err != nil {
 			log.Printf("Failed to add task %s: %v", t.Name, err)
 		}
@@ -50,19 +52,19 @@ func (tm *TaskManager) LoadTasksFromDB() error {
 	return nil
 }
 
-func (tm *TaskManager) registerTask(name, schedule, message string) (cron.EntryID, error) {
+func (tm *TaskManager) registerTask(hash, name, schedule, message string) (cron.EntryID, error) {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
 	// Check trùng tên
 	for _, task := range tm.Tasks {
-		if task.Name == name {
+		if task.Hash == hash {
 			return 0, fmt.Errorf("task name '%s' already exists", name)
 		}
 	}
 
 	id, err := tm.Cron.AddFunc(schedule, func() {
-		log.Printf("[TASK %s] %s", name, message)
+		log.Printf("[TASK %s][%s] %s", hash, name, message)
 	})
 	if err != nil {
 		return 0, err
@@ -81,7 +83,8 @@ func (tm *TaskManager) registerTask(name, schedule, message string) (cron.EntryI
 
 func (tm *TaskManager) AddTask(name, schedule, message string) (cron.EntryID, error) {
 	// Đăng ký task
-	id, err := tm.registerTask(name, schedule, message)
+	hash := uuid.New().String()
+	id, err := tm.registerTask(hash, name, schedule, message)
 	if err != nil {
 		return 0, err
 	}
@@ -91,6 +94,7 @@ func (tm *TaskManager) AddTask(name, schedule, message string) (cron.EntryID, er
 		Name:     name,
 		Schedule: schedule,
 		Message:  message,
+		Hash:     hash,
 		Active:   true,
 	}
 	if err := tm.DB.Create(&taskModel).Error; err != nil {
@@ -103,25 +107,44 @@ func (tm *TaskManager) AddTask(name, schedule, message string) (cron.EntryID, er
 	return id, nil
 }
 
-func (tm *TaskManager) RemoveTaskByName(name string) error {
+func (tm *TaskManager) DisableTaskByName(hash string) error {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
 	var entryID cron.EntryID = 0
 	for id, task := range tm.Tasks {
-		if task.Name == name {
+		if task.Hash == hash {
 			entryID = id
 			break
 		}
 	}
 
 	if entryID == 0 {
-		return fmt.Errorf("task %s not found", name)
+		return fmt.Errorf("task %s not found", hash)
 	}
 
 	tm.Cron.Remove(entryID)
 	delete(tm.Tasks, entryID)
 
 	// Cập nhật DB: đặt active = false
-	return tm.DB.Model(&TaskModel{}).Where("name = ?", name).Update("active", false).Error
+	return tm.DB.Model(&TaskModel{}).Where("hash = ?", hash).Update("active", false).Error
+}
+
+func (tm *TaskManager) DeleteTaskByName(hash string) error {
+	tm.mu.Lock()
+	defer tm.mu.Unlock()
+
+	var entryID cron.EntryID
+	for id, task := range tm.Tasks {
+		if task.Hash == hash {
+			entryID = id
+			break
+		}
+	}
+	if entryID != 0 {
+		tm.Cron.Remove(entryID)
+		delete(tm.Tasks, entryID)
+	}
+
+	return tm.DB.Where("hash = ?", hash).Delete(&TaskModel{}).Error
 }

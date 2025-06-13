@@ -9,5 +9,6 @@ type TaskModel struct {
 	Name     string `gorm:"uniqueIndex"`
 	Schedule string
 	Message  string
+	Hash     string
 	Active   bool // dùng để tạm dừng chạy task nếu muốn
 }
