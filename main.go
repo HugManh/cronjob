@@ -20,6 +20,7 @@ func main() {
 	if err := taskManager.LoadTasksFromDB(); err != nil {
 		log.Fatalf("Load tasks failed: %v", err)
 	}
+	taskManager.Cron.Start()
 
 	r := gin.Default()
 	RegisterRoutes(r, taskManager)

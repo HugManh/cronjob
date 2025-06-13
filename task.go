@@ -35,11 +35,13 @@ func NewTaskManager(db *gorm.DB) *TaskManager {
 func (tm *TaskManager) LoadTasksFromDB() error {
 	var taskModels []TaskModel
 	if err := tm.DB.Where("active = ?", true).Find(&taskModels).Error; err != nil {
+		log.Printf("Failed to load tasks from DB: %v", err)
 		return err
 	}
 
 	for _, t := range taskModels {
-		_, err := tm.AddTask(t.Name, t.Schedule, t.Message)
+		log.Printf("Loading task from DB: %s, Schedule: %s, Message: %s", t.Name, t.Schedule, t.Message)
+		_, err := tm.registerTask(t.Name, t.Schedule, t.Message)
 		if err != nil {
 			log.Printf("Failed to add task %s: %v", t.Name, err)
 		}
@@ -48,20 +50,19 @@ func (tm *TaskManager) LoadTasksFromDB() error {
 	return nil
 }
 
-func (tm *TaskManager) AddTask(name, schedule, message string) (cron.EntryID, error) {
+func (tm *TaskManager) registerTask(name, schedule, message string) (cron.EntryID, error) {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
-	// Check trùng tên trong map
+	// Check trùng tên
 	for _, task := range tm.Tasks {
 		if task.Name == name {
 			return 0, fmt.Errorf("task name '%s' already exists", name)
 		}
 	}
 
-	// Thêm task vào cron
 	id, err := tm.Cron.AddFunc(schedule, func() {
-		log.Printf("[TASK %s] %s\n", name, message)
+		log.Printf("[TASK %s] %s", name, message)
 	})
 	if err != nil {
 		return 0, err
@@ -72,6 +73,17 @@ func (tm *TaskManager) AddTask(name, schedule, message string) (cron.EntryID, er
 		Name:     name,
 		Schedule: schedule,
 		Message:  message,
+	}
+
+	log.Printf("✅ Registered task: %s | %s", name, schedule)
+	return id, nil
+}
+
+func (tm *TaskManager) AddTask(name, schedule, message string) (cron.EntryID, error) {
+	// Đăng ký task
+	id, err := tm.registerTask(name, schedule, message)
+	if err != nil {
+		return 0, err
 	}
 
 	// Lưu vào DB (active = true)
