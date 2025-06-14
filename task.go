@@ -107,6 +107,14 @@ func (tm *TaskManager) AddTask(name, schedule, message string) (cron.EntryID, er
 	return id, nil
 }
 
+func (tm *TaskManager) GetTasks() []TaskModel {
+	var tasks []TaskModel
+	if err := tm.DB.Find(&tasks).Error; err != nil {
+		return []TaskModel{}
+	}
+	return tasks
+}
+
 func (tm *TaskManager) DisableTaskByName(hash string) error {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
