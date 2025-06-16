@@ -1,11 +1,29 @@
 {{extends "../layouts/base.jet"}}
 
 {{block documentBody()}}
+    <div class="breadcrumbs text-sm mb-4">
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/view/tasks">Tasks</a></li>
+            <li>New</li>
+        </ul>
+    </div>
+
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">New Task</h2>
+    </div>
+
     <form
         hx-post="/api/v1/tasks"
         hx-trigger="submit"
         hx-ext="json-enc"
         hx-swap="none"
+        hx-on::after-request="
+        if (event.detail.successful)
+            { window.location.href = '/view/tasks'; }
+        else
+            { alert('Create New Task Failed!'); }
+        "
     >
         <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
             <legend class="fieldset-legend">Create New Task</legend>
