@@ -43,6 +43,33 @@ func RegisterRoutes(r *gin.Engine, tm *TaskManager) {
 		c.JSON(http.StatusOK, tasks)
 	})
 
+	tasks.POST("/:id/active", func(c *gin.Context) {
+		id := c.Param("id")
+
+		var body struct {
+			Active *bool `json:"active" binding:"required"`
+		}
+
+		if err := c.ShouldBindJSON(&body); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+			return
+		}
+
+		if err := tm.SetTaskActiveStatus(id, *body.Active); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+
+		status := "disabled"
+		if *body.Active {
+			status = "enabled"
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"message": fmt.Sprintf("task %s successfully", status),
+			"id":      id,
+		})
+	})
+
 	// Render HTML views
 	view := r.Group("/view")
 	viewTasks := view.Group("/tasks")

@@ -35,14 +35,14 @@ func NewTaskManager(db *gorm.DB) *TaskManager {
 
 // Load task từ DB và đăng ký lại cron
 func (tm *TaskManager) LoadTasksFromDB() error {
-	var taskModels []TaskModel
-	if err := tm.DB.Where("active = ?", true).Find(&taskModels).Error; err != nil {
+	var tasks []TaskModel
+	if err := tm.DB.Where("active = ?", true).Find(&tasks).Error; err != nil {
 		log.Printf("Failed to load tasks from DB: %v", err)
 		return err
 	}
 
-	for _, t := range taskModels {
-		log.Printf("Loading task from DB: %s, Schedule: %s, Message: %s", t.Name, t.Schedule, t.Message)
+	for _, t := range tasks {
+		log.Printf("Loading task from DB: Name: %s Schedule: %s Message: %s Hash: %s", t.Name, t.Schedule, t.Message, t.Hash)
 		_, err := tm.registerTask(t.Hash, t.Name, t.Schedule, t.Message)
 		if err != nil {
 			log.Printf("Failed to add task %s: %v", t.Name, err)
@@ -52,6 +52,7 @@ func (tm *TaskManager) LoadTasksFromDB() error {
 	return nil
 }
 
+// Register a new task in the cron scheduler
 func (tm *TaskManager) registerTask(hash, name, schedule, message string) (cron.EntryID, error) {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
@@ -72,6 +73,7 @@ func (tm *TaskManager) registerTask(hash, name, schedule, message string) (cron.
 
 	tm.Tasks[id] = Task{
 		ID:       id,
+		Hash:     hash,
 		Name:     name,
 		Schedule: schedule,
 		Message:  message,
@@ -81,6 +83,7 @@ func (tm *TaskManager) registerTask(hash, name, schedule, message string) (cron.
 	return id, nil
 }
 
+// AddTask adds a new task to the cron scheduler and saves it to the database
 func (tm *TaskManager) AddTask(name, schedule, message string) (cron.EntryID, error) {
 	// Đăng ký task
 	hash := uuid.New().String()
@@ -115,27 +118,48 @@ func (tm *TaskManager) GetTasks() []TaskModel {
 	return tasks
 }
 
-func (tm *TaskManager) DisableTaskByName(hash string) error {
+func (tm *TaskManager) SetTaskActiveStatus(id string, active bool) error {
+	fmt.Println("----------------------- SetTaskActiveStatus -----------------------", id, active)
+	var task TaskModel
+	if err := tm.DB.Where("id = ?", id).First(&task).Error; err != nil {
+		return fmt.Errorf("task with id %s not found: %v", id, err)
+	}
+
+	if task.Active == active {
+		fmt.Printf("task with id %s is already in desired state", id)
+		return nil
+	}
+
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
-	var entryID cron.EntryID = 0
-	for id, task := range tm.Tasks {
-		if task.Hash == hash {
-			entryID = id
-			break
+	if active {
+		// Thêm lại vào cron
+		entryID, err := tm.registerTask(task.Hash, task.Name, task.Schedule, task.Message)
+		if err != nil {
+			return fmt.Errorf("failed to schedule task: %v", err)
 		}
+		tm.Tasks[entryID] = Task{Hash: task.Hash}
+	} else {
+		// Gỡ khỏi cron
+		var entryID cron.EntryID
+		found := false
+		for id, t := range tm.Tasks {
+			fmt.Printf("Checking task: %v against %s\n", t, task.Hash)
+			if t.Hash == task.Hash {
+				entryID = id
+				found = true
+				break
+			}
+		}
+		if !found {
+			return fmt.Errorf("task with hash %s not found in cron", task.Hash)
+		}
+		tm.Cron.Remove(entryID)
+		delete(tm.Tasks, entryID)
 	}
-
-	if entryID == 0 {
-		return fmt.Errorf("task %s not found", hash)
-	}
-
-	tm.Cron.Remove(entryID)
-	delete(tm.Tasks, entryID)
-
-	// Cập nhật DB: đặt active = false
-	return tm.DB.Model(&TaskModel{}).Where("hash = ?", hash).Update("active", false).Error
+	// Cập nhật DB: đặt active
+	return tm.DB.Model(&task).Update("active", active).Error
 }
 
 func (tm *TaskManager) DeleteTaskByName(hash string) error {

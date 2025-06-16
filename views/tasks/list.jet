@@ -4,9 +4,11 @@
     <table class="table w-full border-collapse border border-gray-300">
         <thead class="bg-gray-100">
             <tr>
-                <th class="border p-2">Name</th>
-                <th class="border p-2">Schedule</th>
-                <th class="border p-2">Message</th>
+                <th>Name</th>
+                <th>Schedule</th>
+                <th>Message</th>
+                <td>Status</td>
+                <th></th>
             </tr>
         </thead>
         <tbody>
@@ -16,14 +18,22 @@
 {{end}}
 
 {{block documentBody()}}
-    <h1>List of Tasks</h1>
-
     {{yield table() content}}
         {{range id, task := .}}
             <tr>
-                <td class="border p-2">{{task.Name}}</td>
-                <td class="border p-2">{{task.Schedule}}</td>
-                <td class="border p-2">{{task.Message}}</td>
+                <td>{{task.Name}}</td>
+                <td>{{task.Schedule}}</td>
+                <td>{{task.Message}}</td>
+                <td>
+                    {{ if task.Active }}
+                        <button class="btn btn-soft btn-success">Active</button>
+                    {{ else }}
+                        <button class="btn btn-soft btn-error">Inactive</button>
+                    {{ end }}
+                </td>
+                <th>
+                    <button class="btn btn-ghost btn-xs">details</button>
+                </th>
             </tr>
         {{end}}
     {{end}}
