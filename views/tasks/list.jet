@@ -1,21 +1,30 @@
 {{extends "../layouts/base.jet"}}
 
-{{block ul()}}
-    <ul>
-        {{yield content}}
-    </ul>
+{{block table()}}
+    <table class="table w-full border-collapse border border-gray-300">
+        <thead class="bg-gray-100">
+            <tr>
+                <th class="border p-2">Name</th>
+                <th class="border p-2">Schedule</th>
+                <th class="border p-2">Message</th>
+            </tr>
+        </thead>
+        <tbody>
+            {{yield content}}
+        </tbody>
+    </table>
 {{end}}
 
 {{block documentBody()}}
     <h1>List of Tasks</h1>
 
-    {{yield ul() content}}
-        {{range id, value := .}}
-            <li style="margin-bottom: 1em;">
-                <strong style="font-size: 1.1em;">{{ task.Name }}</strong><br>
-                <em style="color: gray;">Schedule:</em> {{ task.Schedule }}<br>
-                <span>{{ task.Message }}</span>
-            </li>
+    {{yield table() content}}
+        {{range id, task := .}}
+            <tr>
+                <td class="border p-2">{{task.Name}}</td>
+                <td class="border p-2">{{task.Schedule}}</td>
+                <td class="border p-2">{{task.Message}}</td>
+            </tr>
         {{end}}
     {{end}}
 {{end}}

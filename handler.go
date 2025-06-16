@@ -24,12 +24,7 @@ func RegisterRoutes(r *gin.Engine, tm *TaskManager) {
 	tasks := v1.Group("/tasks")
 	tasks.POST("/", func(c *gin.Context) {
 		var req AddTaskRequest
-		// if err := c.ShouldBindJSON(&req); err != nil {
-		// 	c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
-		// 	return
-		// }
-
-		if err := c.ShouldBind(&req); err != nil {
+		if err := c.ShouldBindJSON(&req); err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 			return
 		}
@@ -48,18 +43,18 @@ func RegisterRoutes(r *gin.Engine, tm *TaskManager) {
 		c.JSON(http.StatusOK, tasks)
 	})
 
+	// Render HTML views
 	view := r.Group("/view")
 	viewTasks := view.Group("/tasks")
-	// viewTasks.GET("/new", func(c *gin.Context) {
-	// 	tmpl, err := views.GetTemplate("tasks/new.jet")
-	// 	if err != nil {
-	// 		c.String(http.StatusInternalServerError, "template error: %v", err)
-	// 		return
-	// 	}
+	viewTasks.GET("/new", func(c *gin.Context) {
+		tmpl, err := views.GetTemplate("tasks/new.jet")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "template error: %v", err)
+			return
+		}
 
-	// 	tmpl.Execute(c.Writer, nil, nil)
-	// })
-
+		tmpl.Execute(c.Writer, nil, nil)
+	})
 	viewTasks.GET("/", func(c *gin.Context) {
 		tasks := tm.GetTasks()
 
@@ -69,12 +64,12 @@ func RegisterRoutes(r *gin.Engine, tm *TaskManager) {
 			return
 		}
 
-		// vars := make(jet.VarMap)
-		// vars.Set("tasks", tasks)
+		vars := make(jet.VarMap)
+		vars.Set("tasks", tasks)
 
 		fmt.Println("Tasks list:", tasks)
 
-		err = tmpl.Execute(c.Writer, nil, tasks)
+		err = tmpl.Execute(c.Writer, vars, tasks)
 		if err != nil {
 			c.String(http.StatusInternalServerError, fmt.Sprintf("render error: %v", err))
 		}
