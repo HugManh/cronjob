@@ -13,38 +13,67 @@
         <h2 class="text-xl font-bold">Detail Task</h2>
     </div>
 
-    <form
-        hx-put="/api/v1/tasks/{{.ID}}"
-        hx-trigger="submit"
-        hx-ext="json-enc"
-        hx-swap="none"
-        hx-on::after-request="
-        if (event.detail.successful)
-            { window.location.href = '/view/tasks'; }
-        else
-            { alert('Update Task Failed!'); }
-        "
-    >
-        <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
-            <legend class="fieldset-legend">Task</legend>
+    <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+        <legend class="fieldset-legend">Task</legend>
 
-            <label class="label" for="name">Name</label>
-            <input type="text" id="name" name="name" class="input" value="{{.Name}}" required>
+        <form id="taskForm">
+            <div class="form-control w-full mt-4">
+                <label class="label mb-2" for="name">Name</label>
+                <input type="text" id="name" name="name" class="input input-bordered w-full" value="{{.Name}}" required>
+            </div>
 
-            <label class="label" for="schedule">Schedule</label>
-            <input type="text" id="schedule" name="schedule" class="input" placeholder="e.g., * * * * *" value="{{.Schedule}}" required>
+            <div class="form-control w-full mt-4">
+                <label class="label mb-2" for="schedule">Schedule</label>
+                <input type="text" id="schedule" name="schedule" class="input input-bordered w-full" placeholder="e.g., * * * * *" value="{{.Schedule}}" required>
+            </div>
 
-            <label class="label" for="message">Message</label>
-            <textarea id="message" name="message" class="textarea" rows="4">{{.Message}}</textarea>
+            <div class="form-control w-full mt-4">
+                <label class="label mb-2" for="message">Message</label>
+                <textarea id="message" name="message" class="textarea textarea-bordered w-full" rows="4">{{.Message}}</textarea>
+            </div>
 
-            <label class="label" for="message">Status</label>
-            <select id="active" name="active" class="select" required>
-                <option disabled>Select status</option>
-                <option value="true" {{if .Active}}selected{{end}}>Active</option>
-                <option value="false" {{if not .Active}}selected{{end}}>Inactive</option>
-            </select>
-
-            <button class="btn btn-primary mt-4">Update</button>
-        </fieldset>
-    </form>
+            <div class="form-control w-full mt-4">
+                <label class="label" for="message">Status</label>
+                <select id="active" name="active" class="select select-bordered w-full" required>
+                    <option disabled>Select status</option>
+                    <option value="true" {{if .Active}}selected{{end}}>Active</option>
+                    <option value="false" {{if not .Active}}selected{{end}}>Inactive</option>
+                </select>
+            </div>
+        </form>
+        <div class="modal-action mt-4">
+            <button
+                class="btn btn-primary p-2"
+                hx-put="/api/v1/tasks/{{.ID}}"
+                hx-ext="json-enc"
+                hx-include="#taskForm"
+                hx-trigger="click"
+                hx-swap="none"
+                hx-on::after-request="
+                    if (event.detail.successful) {
+                        window.location.href = '/view/tasks';
+                    } else {
+                        alert('Update Task Failed!');
+                    }
+                "
+            >
+                Update
+            </button>
+            <button
+                class="btn btn-error p-2"
+                hx-delete="/api/v1/tasks/{{.ID}}"
+                hx-trigger="click"
+                hx-swap="none"
+                hx-on::after-request="
+                    if (event.detail.successful) {
+                        window.location.href = '/view/tasks';
+                    } else {
+                        alert('Delete Task Failed!');
+                    }
+                "
+            >
+                Delete
+            </button>
+        </div>
+    </fieldset>
 {{end}}

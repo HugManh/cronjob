@@ -10,7 +10,7 @@
         <title>{{ isset(title) ? title : "" }}</title>
     </head>
     <body>
-        <div id="main_content">
+        <div id="main_content" class="m-10">
         {{block documentBody()}}{{end}}
         </div>
     </body>
