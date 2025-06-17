@@ -23,6 +23,10 @@ func main() {
 	taskManager.Cron.Start()
 
 	r := gin.Default()
+	r.Use(func(c *gin.Context) {
+		log.Println("[ACCESS] Request >>", c.Request.Method, c.Request.URL.Path)
+		c.Next()
+	})
 	RegisterRoutes(r, taskManager)
 
 	r.Run(":8080") // listen on localhost:8080

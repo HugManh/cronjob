@@ -229,13 +229,18 @@ func (tm *TaskManager) UpdateTask(id string, name, schedule, message string, act
 	return nil
 }
 
-func (tm *TaskManager) DeleteTaskByName(hash string) error {
+func (tm *TaskManager) DeleteTask(id string) error {
+    var task TaskModel
+	if err := tm.DB.Where("id = ?", id).First(&task).Error; err != nil {
+		return fmt.Errorf("task with id %s not found: %v", id, err)
+	}
+
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
 	var entryID cron.EntryID
-	for id, task := range tm.Tasks {
-		if task.Hash == hash {
+	for id, t := range tm.Tasks {
+		if t.Hash == task.Hash {
 			entryID = id
 			break
 		}
@@ -245,5 +250,9 @@ func (tm *TaskManager) DeleteTaskByName(hash string) error {
 		delete(tm.Tasks, entryID)
 	}
 
-	return tm.DB.Where("hash = ?", hash).Delete(&TaskModel{}).Error
+    if err := tm.DB.Delete(&task).Error; err != nil {
+        return fmt.Errorf("failed to delete task from DB: %v", err)
+    }
+
+	return nil
 }

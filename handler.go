@@ -85,6 +85,16 @@ func RegisterRoutes(r *gin.Engine, tm *TaskManager) {
 		c.JSON(http.StatusOK, gin.H{"message": "task updated", "id": id})
 	})
 
+	tasks.DELETE("/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		if err := tm.DeleteTask(id); err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{"message": "task deleted", "id": id})
+	})
+
+    // Set task active status
 	tasks.POST("/:id/active", func(c *gin.Context) {
 		id := c.Param("id")
 
