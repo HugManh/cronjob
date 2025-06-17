@@ -118,6 +118,14 @@ func (tm *TaskManager) GetTasks() []TaskModel {
 	return tasks
 }
 
+func (tm *TaskManager) GetTaskById(id string) (*TaskModel, error) {
+	var task TaskModel
+	if err := tm.DB.Where("id = ?", id).First(&task).Error; err != nil {
+		return nil, fmt.Errorf("task with id %s not found: %v", id, err)
+	}
+	return &task, nil
+}
+
 func (tm *TaskManager) SetTaskActiveStatus(id string, active bool) error {
 	fmt.Println("----------------------- SetTaskActiveStatus -----------------------", id, active)
 	var task TaskModel

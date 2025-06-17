@@ -43,6 +43,16 @@ func RegisterRoutes(r *gin.Engine, tm *TaskManager) {
 		c.JSON(http.StatusOK, tasks)
 	})
 
+	tasks.GET("/:id", func(c *gin.Context) {
+		id := c.Param("id")
+		task, err := tm.GetTaskById(id)
+		if err != nil {
+			c.JSON(http.StatusNotFound, gin.H{"error": "task not found"})
+			return
+		}
+		c.JSON(http.StatusOK, task)
+	})
+
 	tasks.POST("/:id/active", func(c *gin.Context) {
 		id := c.Param("id")
 
