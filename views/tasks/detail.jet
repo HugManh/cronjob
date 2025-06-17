@@ -1,0 +1,45 @@
+{{extends "../layouts/base.jet"}}
+
+{{block documentBody()}}
+    <div class="breadcrumbs text-sm mb-4">
+        <ul>
+            <li><a href="/view">Home</a></li>
+            <li><a href="/view/tasks">Tasks</a></li>
+            <li><a href="/view/tasks/{{.ID}}">{{.Name}}</a></li>
+        </ul>
+    </div>
+
+    <div class="flex justify-between items-center mb-4">
+        <h2 class="text-xl font-bold">Detail Task</h2>
+    </div>
+
+    <form
+        hx-put="/api/v1/tasks/{{.ID}}"
+        hx-trigger="submit"
+        hx-ext="json-enc"
+        hx-swap="none"
+        hx-on::after-request="
+        if (event.detail.successful)
+            { window.location.href = '/view/tasks'; }
+        else
+            { alert('Update Task Failed!'); }
+        "
+    >
+        <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+            <legend class="fieldset-legend">Task</legend>
+
+            <input type="hidden" name="id" value="{{.ID}}">
+
+            <label class="label" for="name">Name</label>
+            <input type="text" id="name" name="name" class="input" value="{{.Name}}" required>
+
+            <label class="label" for="schedule">Schedule</label>
+            <input type="text" id="schedule" name="schedule" class="input" placeholder="e.g., * * * * *" value="{{.Schedule}}" required>
+
+            <label class="label" for="message">Message</label>
+            <textarea id="message" name="message" class="textarea" rows="4">{{.Message}}</textarea>
+
+            <button class="btn btn-primary mt-4">Update</button>
+        </fieldset>
+    </form>
+{{end}}

@@ -37,7 +37,7 @@
 
     {{yield table() content}}
         {{range id, task := .}}
-            <tr class="hover:bg-sky-100 cursor-pointer" onclick="console.log('fdfds')">
+            <tr class="hover:bg-sky-100 cursor-pointer" onclick="window.location.href='/view/tasks/{{task.ID}}'">
                 <td>{{task.Name}}</td>
                 <td>{{task.Schedule}}</td>
                 <td>{{task.Message}}</td>

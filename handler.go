@@ -111,4 +111,27 @@ func RegisterRoutes(r *gin.Engine, tm *TaskManager) {
 			c.String(http.StatusInternalServerError, fmt.Sprintf("render error: %v", err))
 		}
 	})
+
+	viewTasks.GET("/:id", func(c *gin.Context) {
+        id := c.Param("id")
+        task, err := tm.GetTaskById(id)
+        if err != nil {
+            c.String(http.StatusNotFound, "task not found: %v", err)
+            return
+        }
+
+        tmpl, err := views.GetTemplate("tasks/detail.jet")
+        if err != nil {
+            c.String(http.StatusInternalServerError, "template error: %v", err)
+            return
+        }
+
+        vars := make(jet.VarMap)
+        vars.Set("task", task)
+
+        err = tmpl.Execute(c.Writer, vars, task)
+        if err != nil {
+            c.String(http.StatusInternalServerError, fmt.Sprintf("render error: %v", err))
+        }
+	})
 }
