@@ -1,20 +1,22 @@
 {{extends "../layouts/base.jet"}}
 
 {{block table()}}
-    <table class="table w-full border-collapse border border-gray-300">
-        <thead class="bg-gray-100">
-            <tr>
-                <th>Name</th>
-                <th>Schedule</th>
-                <th>Message</th>
-                <td>Status</td>
-                <th></th>
-            </tr>
-        </thead>
-        <tbody>
-            {{yield content}}
-        </tbody>
-    </table>
+    <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
+        <table class="table">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th>Name</th>
+                    <th>Schedule</th>
+                    <th>Message</th>
+                    <td>Status</td>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {{yield content}}
+            </tbody>
+        </table>
+    </div>
 {{end}}
 
 {{block documentBody()}}

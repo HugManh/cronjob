@@ -29,7 +29,7 @@
 
             <div class="form-control w-full mt-4">
                 <label class="label mb-2" for="message">Message</label>
-                <textarea id="message" name="message" class="textarea textarea-bordered w-full" rows="4">{{.Message}}</textarea>
+                <textarea id="message" name="message" class="textarea textarea-bordered w-full" rows="4" required>{{.Message}}</textarea>
             </div>
 
             <div class="form-control w-full mt-4">
@@ -41,6 +41,7 @@
                 </select>
             </div>
         </form>
+
         <div class="modal-action mt-4">
             <button
                 class="btn btn-primary p-2"

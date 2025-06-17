@@ -12,32 +12,42 @@
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold">New Task</h2>
     </div>
+    <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+        <legend class="fieldset-legend">Create New Task</legend>
+        <form id="newTaskForm">
+            <div class="form-control w-full mt-4">
+                <label class="label mb-2" for="name">Name</label>
+                <input type="text" id="name" name="name" class="input input-bordered w-full" required>
+            </div>
 
-    <form
-        hx-post="/api/v1/tasks"
-        hx-trigger="submit"
-        hx-ext="json-enc"
-        hx-swap="none"
-        hx-on::after-request="
-        if (event.detail.successful)
-            { window.location.href = '/view/tasks'; }
-        else
-            { alert('Create New Task Failed!'); }
-        "
-    >
-        <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
-            <legend class="fieldset-legend">Create New Task</legend>
+            <div class="form-control w-full mt-4">
+                <label class="label mb-2" for="schedule">Schedule</label>
+                <input type="text" id="schedule" name="schedule" class="input input-bordered w-full" placeholder="e.g., * * * * *" required>
+            </div>
 
-            <label class="label" for="name">Name</label>
-            <input type="text" id="name" name="name" class="input" required>
+            <div class="form-control w-full mt-4">
+                <label class="label mb-2" for="message">Message</label>
+                <textarea id="message" name="message" class="textarea textarea-bordered w-full" rows="4" required></textarea>
+            </div>
+        </form>
 
-            <label class="label" for="schedule">Schedule</label>
-            <input type="text" id="schedule" name="schedule" class="input" placeholder="e.g., * * * * *" required>
-
-            <label class="label" for="message">Message</label>
-            <textarea id="message" name="message" class="textarea" rows="4"></textarea>
-
-            <button class="btn btn-primary mt-4">Create</button>
-        </fieldset>
-    </form>
+        <div class="modal-action mt-4">
+            <button
+                class="btn btn-primary mt-4 p-2"
+                hx-post="/api/v1/tasks"
+                hx-ext="json-enc"
+                hx-include="#newTaskForm"
+                hx-trigger="click"
+                hx-swap="none"
+                hx-on::after-request="
+                if (event.detail.successful)
+                    { window.location.href = '/view/tasks'; }
+                else
+                    { alert('Create New Task Failed!'); }
+                "
+            >
+                Create
+            </button>
+        </div>
+    </fieldset>
 {{end}}

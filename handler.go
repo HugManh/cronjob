@@ -12,12 +12,15 @@ import (
 type BoolString bool
 
 func (b *BoolString) UnmarshalJSON(data []byte) error {
-	str := strings.Trim(string(data), "\"")
+
+    str := strings.Trim(string(data), "\"")
 	switch str {
-	case "true", "True", "1":
+    case "true", "True", "1":
 		*b = true
 	case "false", "False", "0":
 		*b = false
+    case "":
+        return nil
 	default:
 		return fmt.Errorf("invalid boolean: %s", str)
 	}
@@ -25,10 +28,10 @@ func (b *BoolString) UnmarshalJSON(data []byte) error {
 }
 
 type AddTaskRequest struct {
-	Name     string     `json:"name"`
-	Schedule string     `json:"schedule"` // vd: "*/10 * * * * *"
-	Message  string     `json:"message"`
-	Active   BoolString `json:"active"` // Trạng thái kích hoạt
+	Name     string      `json:"name"`
+	Schedule string      `json:"schedule"` // vd: "*/10 * * * * *"
+	Message  string      `json:"message"`
+	Active   *BoolString `json:"active"`
 }
 
 var views = jet.NewSet(
@@ -42,7 +45,11 @@ func RegisterRoutes(r *gin.Engine, tm *TaskManager) {
 	tasks.POST("/", func(c *gin.Context) {
 		var req AddTaskRequest
 		if err := c.ShouldBindJSON(&req); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+			c.JSON(http.StatusBadRequest, gin.H{
+                "success": false,
+				"message": "invalid request",
+				"error":   err,
+			})
 			return
 		}
 
@@ -77,7 +84,7 @@ func RegisterRoutes(r *gin.Engine, tm *TaskManager) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 			return
 		}
-		if err := tm.UpdateTask(id, req.Name, req.Schedule, req.Message, bool(req.Active)); err != nil {
+		if err := tm.UpdateTask(id, req.Name, req.Schedule, req.Message, bool(*req.Active)); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
 		}
@@ -94,7 +101,7 @@ func RegisterRoutes(r *gin.Engine, tm *TaskManager) {
 		c.JSON(http.StatusOK, gin.H{"message": "task deleted", "id": id})
 	})
 
-    // Set task active status
+	// Set task active status
 	tasks.POST("/:id/active", func(c *gin.Context) {
 		id := c.Param("id")
 
