@@ -12,6 +12,7 @@ func InitDB(dsn string) *gorm.DB {
 		DSN:                  dsn,
 		PreferSimpleProtocol: true,
 	}), &gorm.Config{})
+	db = db.Debug()
 	if err != nil {
 		log.Fatalf("failed to connect DB: %v", err)
 	}

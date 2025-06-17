@@ -127,14 +127,13 @@ func (tm *TaskManager) GetTaskById(id string) (*TaskModel, error) {
 }
 
 func (tm *TaskManager) SetTaskActiveStatus(id string, active bool) error {
-	fmt.Println("----------------------- SetTaskActiveStatus -----------------------", id, active)
 	var task TaskModel
 	if err := tm.DB.Where("id = ?", id).First(&task).Error; err != nil {
 		return fmt.Errorf("task with id %s not found: %v", id, err)
 	}
 
 	if task.Active == active {
-		fmt.Printf("task with id %s is already in desired state", id)
+		log.Printf("task with id %s is already in desired state", id)
 		return nil
 	}
 
@@ -153,7 +152,7 @@ func (tm *TaskManager) SetTaskActiveStatus(id string, active bool) error {
 		var entryID cron.EntryID
 		found := false
 		for id, t := range tm.Tasks {
-			fmt.Printf("Checking task: %v against %s\n", t, task.Hash)
+			log.Printf("Checking task: %v against %s\n", t, task.Hash)
 			if t.Hash == task.Hash {
 				entryID = id
 				found = true
@@ -168,6 +167,66 @@ func (tm *TaskManager) SetTaskActiveStatus(id string, active bool) error {
 	}
 	// Cập nhật DB: đặt active
 	return tm.DB.Model(&task).Update("active", active).Error
+}
+
+func (tm *TaskManager) UpdateTask(id string, name, schedule, message string, active bool) error {
+	tm.mu.Lock()
+	defer tm.mu.Unlock()
+
+	var task TaskModel
+	if err := tm.DB.Where("id = ?", id).First(&task).Error; err != nil {
+		return fmt.Errorf("task with id %s not found: %v", id, err)
+	}
+
+	// Nếu không có thay đổi, không làm gì
+	if task.Name == name && task.Schedule == schedule && task.Message == message && task.Active == active {
+		return nil
+	}
+
+	// Gỡ task cũ khỏi cron nếu đang active
+	if task.Active {
+		var entryID cron.EntryID
+		found := false
+		for id, t := range tm.Tasks {
+			if t.Hash == task.Hash {
+				entryID = id
+				tm.Cron.Remove(entryID)
+				delete(tm.Tasks, entryID)
+				found = true
+				break
+			}
+		}
+		if !found {
+			log.Printf("Warning: active task with hash %s not found in cron", task.Hash)
+		}
+	}
+
+	// Cập nhật DB
+	task.Name = name
+	task.Schedule = schedule
+	task.Message = message
+	task.Active = active
+	if err := tm.DB.Save(&task).Error; err != nil {
+		return fmt.Errorf("failed to update task in DB: %v", err)
+	}
+
+	// Đăng ký lại vào cron nếu đang active
+	if task.Active {
+		newID, err := tm.registerTask(task.Hash, name, schedule, message)
+		if err != nil {
+			return fmt.Errorf("failed to re-register updated task in cron: %v", err)
+		}
+		tm.Tasks[newID] = Task{
+			ID:       newID,
+			Hash:     task.Hash,
+			Name:     name,
+			Schedule: schedule,
+			Message:  message,
+		}
+	}
+
+	log.Printf("✅ Updated task: %s", name)
+	return nil
 }
 
 func (tm *TaskManager) DeleteTaskByName(hash string) error {
