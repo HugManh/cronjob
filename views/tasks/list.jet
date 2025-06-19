@@ -1,9 +1,9 @@
 {{  extends "../pages/task.jet"  }}
 
 {{ block table() }}
-    <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
+    <div class="overflow-x-auto rounded-box border bg-base-100">
         <table class="table">
-            <thead class="bg-gray-100">
+            <thead class="bg-base-300">
                 <tr>
                     <th>Name</th>
                     <th>Schedule</th>
@@ -39,15 +39,15 @@
 
     {{ yield table() content }}
         {{ range id, task := . }}
-            <tr class="hover:bg-sky-100 cursor-pointer" onclick="window.location.href='/view/tasks/{{ task.ID }}'">
+            <tr class="hover:bg-base-200 cursor-pointer" onclick="window.location.href='/view/tasks/{{ task.ID }}'">
                 <td>{{ task.Name }}</td>
                 <td>{{ task.Schedule }}</td>
                 <td>{{ task.Message }}</td>
                 <td>
                     {{  if task.Active  }}
-                        <button class="btn btn-soft btn-success">Active</button>
+                        <div class="btn btn-soft btn-success">Active</div>
                     {{  else  }}
-                        <button class="btn btn-soft btn-error">Inactive</button>
+                        <div class="btn btn-soft btn-error">Inactive</div>
                     {{  end  }}
                 </td>
                 <th>

@@ -2,8 +2,8 @@
 
 {{ block body() }}
     {{ include "../partials/header.jet" }}
-    <div id="main_content" class="m-10">
+    <main id="main_content" class="flex-grow m-10">
         {{ block documentBody() }}{{ end }}
-    </div>
+    </main>
     {{ include "../partials/footer.jet" }}
 {{ end }}

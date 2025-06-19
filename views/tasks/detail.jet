@@ -13,28 +13,28 @@
         <h2 class="text-xl font-bold">Detail Task</h2>
     </div>
 
-    <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+    <fieldset class="fieldset bg-base-200 rounded-box w-xs border p-4">
         <legend class="fieldset-legend">Task</legend>
 
         <form id="taskForm">
             <div class="form-control w-full mt-4">
                 <label class="label mb-2" for="name">Name</label>
-                <input type="text" id="name" name="name" class="input input-bordered w-full" value="{{.Name}}" required>
+                <input type="text" id="name" name="name" class="input input-bordered w-full p-2" value="{{.Name}}" required>
             </div>
 
             <div class="form-control w-full mt-4">
                 <label class="label mb-2" for="schedule">Schedule</label>
-                <input type="text" id="schedule" name="schedule" class="input input-bordered w-full" placeholder="e.g., * * * * *" value="{{.Schedule}}" required>
+                <input type="text" id="schedule" name="schedule" class="input input-bordered w-full p-2" placeholder="e.g., * * * * *" value="{{.Schedule}}" required>
             </div>
 
             <div class="form-control w-full mt-4">
                 <label class="label mb-2" for="message">Message</label>
-                <textarea id="message" name="message" class="textarea textarea-bordered w-full" rows="4" required>{{.Message}}</textarea>
+                <textarea id="message" name="message" class="textarea textarea-bordered w-full p-2" rows="4" required>{{.Message}}</textarea>
             </div>
 
             <div class="form-control w-full mt-4">
                 <label class="label" for="message">Status</label>
-                <select id="active" name="active" class="select select-bordered w-full" required>
+                <select id="active" name="active" class="select select-bordered w-full p-2" required>
                     <option disabled>Select status</option>
                     <option value="true" {{if .Active}}selected{{end}}>Active</option>
                     <option value="false" {{if not .Active}}selected{{end}}>Inactive</option>
@@ -44,7 +44,7 @@
 
         <div class="modal-action mt-4">
             <button
-                class="btn btn-primary p-2"
+                class="btn btn-info p-2"
                 hx-put="/api/v1/tasks/{{.ID}}"
                 hx-ext="json-enc"
                 hx-include="#taskForm"
