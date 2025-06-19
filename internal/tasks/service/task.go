@@ -21,25 +21,6 @@ func NewTaskService(r *repository.TaskRepo, tm *taskmanager.TaskManager) *TaskSe
 	return &TaskService{repo: r, tm: tm}
 }
 
-// Load task từ DB và đăng ký lại cron
-func (s *TaskService) LoadTasksFromDB() error {
-	tasks, err := s.repo.GetAll()
-	if err != nil {
-		log.Printf("Failed to load tasks from DB: %v", err)
-		return err
-	}
-
-	for _, t := range tasks {
-		log.Printf("Loading task from DB: Name: %s Schedule: %s Message: %s Hash: %s", t.Name, t.Schedule, t.Message, t.Hash)
-		_, err := s.tm.RegisterTask(t.Hash, t.Name, t.Schedule, t.Message)
-		if err != nil {
-			log.Printf("Failed to add task %s: %v", t.Name, err)
-		}
-	}
-
-	return nil
-}
-
 // AddTask adds a new task to the cron scheduler and saves it to the database
 func (s *TaskService) AddTask(name, schedule, message string) (cron.EntryID, error) {
 	// Đăng ký task

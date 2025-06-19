@@ -25,6 +25,11 @@ func main() {
 	tm := taskmanager.NewTaskManager()
 	tm.Cron.Start()
 
+	// Register tasks from DB
+	if err := tm.LoadTasksFromDB(db); err != nil {
+		log.Fatalf("Registering tasks from DB failed: %v", err)
+	}
+
 	router := gin.Default()
 	router.Use(func(c *gin.Context) {
 		log.Println("[ACCESS] Request >>", c.Request.Method, c.Request.URL.Path)

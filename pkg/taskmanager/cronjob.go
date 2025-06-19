@@ -5,6 +5,7 @@ import (
 	"log"
 	"sync"
 
+	"github.com/HugManh/cronjob/internal/tasks/model"
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
@@ -29,6 +30,24 @@ func NewTaskManager() *TaskManager {
 		Cron:  cron.New(cron.WithSeconds()),
 		Tasks: make(map[cron.EntryID]Task),
 	}
+}
+
+func (tm *TaskManager) LoadTasksFromDB(db *gorm.DB) error {
+	var tasks []model.Task
+	if err := db.Where("active = ?", true).Find(&tasks).Error; err != nil {
+		log.Printf("Failed to load tasks from DB: %v", err)
+		return err
+	}
+
+	for _, t := range tasks {
+		log.Printf("Loading task from DB: Name: %s Schedule: %s Message: %s Hash: %s", t.Name, t.Schedule, t.Message, t.Hash)
+		_, err := tm.RegisterTask(t.Hash, t.Name, t.Schedule, t.Message)
+		if err != nil {
+			log.Printf("Failed to add task %s: %v", t.Name, err)
+		}
+	}
+
+	return nil
 }
 
 // Register a new task in the cron scheduler
