@@ -20,6 +20,7 @@ func (r *TaskRepo) Create(task *model.Task) error {
 func (r *TaskRepo) GetAll() ([]model.Task, error) {
 	var tasks []model.Task
 	err := r.db.Find(&tasks).Error
+	r.db.Commit()
 	return tasks, err
 }
 
@@ -46,7 +47,7 @@ func (r *TaskRepo) GetTaskByActive(isActive bool) ([]model.Task, error) {
 }
 
 func (r *TaskRepo) Update(task *model.Task) error {
-	return r.db.Save(task).Error
+	return r.db.Model(&model.Task{}).Where("id = ?", task.ID).Updates(task).Error
 }
 
 func (r *TaskRepo) Delete(id string) error {
