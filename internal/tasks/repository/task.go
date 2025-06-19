@@ -20,7 +20,6 @@ func (r *TaskRepo) Create(task *model.Task) error {
 func (r *TaskRepo) GetAll() ([]model.Task, error) {
 	var tasks []model.Task
 	err := r.db.Find(&tasks).Error
-	r.db.Commit()
 	return tasks, err
 }
 

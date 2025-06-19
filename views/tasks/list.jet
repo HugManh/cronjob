@@ -1,6 +1,6 @@
-{{extends "../layouts/base.jet"}}
+{{  extends "../pages/index.jet"  }}
 
-{{block table()}}
+{{ block table() }}
     <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
         <table class="table">
             <thead class="bg-gray-100">
@@ -13,13 +13,13 @@
                 </tr>
             </thead>
             <tbody>
-                {{yield content}}
+                {{ yield content }}
             </tbody>
         </table>
     </div>
-{{end}}
+{{ end }}
 
-{{block documentBody()}}
+{{ block documentBody() }}
     <div class="breadcrumbs text-sm mb-4">
         <ul>
             <li><a href="/view">Home</a></li>
@@ -37,23 +37,23 @@
         </a>
     </div>
 
-    {{yield table() content}}
-        {{range id, task := .}}
-            <tr class="hover:bg-sky-100 cursor-pointer" onclick="window.location.href='/view/tasks/{{task.ID}}'">
-                <td>{{task.Name}}</td>
-                <td>{{task.Schedule}}</td>
-                <td>{{task.Message}}</td>
+    {{ yield table() content }}
+        {{ range id, task := . }}
+            <tr class="hover:bg-sky-100 cursor-pointer" onclick="window.location.href='/view/tasks/{{ task.ID }}'">
+                <td>{{ task.Name }}</td>
+                <td>{{ task.Schedule }}</td>
+                <td>{{ task.Message }}</td>
                 <td>
-                    {{ if task.Active }}
+                    {{  if task.Active  }}
                         <button class="btn btn-soft btn-success">Active</button>
-                    {{ else }}
+                    {{  else  }}
                         <button class="btn btn-soft btn-error">Inactive</button>
-                    {{ end }}
+                    {{  end  }}
                 </td>
                 <th>
                     <button class="btn btn-ghost btn-xs">...</button>
                 </th>
             </tr>
-        {{end}}
-    {{end}}
-{{end}}
+        {{ end }}
+    {{ end }}
+{{ end }}

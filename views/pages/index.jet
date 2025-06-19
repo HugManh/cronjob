@@ -1,0 +1,9 @@
+{{ extends "../layouts/main.jet" }}
+
+{{ block body() }}
+    {{ include "../partials/header.jet" }}
+    <div id="main_content" class="m-10">
+        {{ block documentBody() }}{{ end }}
+    </div>
+    {{ include "../partials/footer.jet" }}
+{{ end }}

@@ -1,0 +1,4 @@
+<header>
+    <h1>{{ isset(Title) ? Title : "" }}</h1>
+</header>
+<hr>
