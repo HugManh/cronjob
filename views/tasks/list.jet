@@ -1,4 +1,4 @@
-{{  extends "../pages/index.jet"  }}
+{{  extends "../pages/task.jet"  }}
 
 {{ block table() }}
     <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">

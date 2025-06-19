@@ -1,4 +1,4 @@
-{{  extends "../pages/index.jet"  }}
+{{  extends "../pages/task.jet"  }}
 
 {{block documentBody()}}
     <div class="breadcrumbs text-sm mb-4">
