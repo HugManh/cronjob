@@ -23,14 +23,6 @@ func (r *TaskRepo) GetAll() ([]model.Task, error) {
 	return tasks, err
 }
 
-// func (r *TaskRepo) GetByID(id uint) (*model.Task, error) {
-// 	var task model.Task
-// 	if err := r.db.First(&task, id).Error; err != nil {
-// 		return nil, err
-// 	}
-// 	return &task, nil
-// }
-
 func (r *TaskRepo) GetByID(id string) (*model.Task, error) {
 	var task model.Task
 	if err := r.db.Where("id = ?", id).First(&task).Error; err != nil {
@@ -46,7 +38,10 @@ func (r *TaskRepo) GetTaskByActive(isActive bool) ([]model.Task, error) {
 }
 
 func (r *TaskRepo) Update(task *model.Task) error {
-	return r.db.Model(&model.Task{}).Where("id = ?", task.ID).Updates(task).Error
+	return r.db.Model(&model.Task{}).
+		Where("id = ?", task.ID).
+		Select("Name", "Schedule", "Message", "Hash", "Active").
+		Updates(task).Error
 }
 
 func (r *TaskRepo) Delete(id string) error {
