@@ -1,0 +1,28 @@
+{{ range id, task := . }}
+    <tr class="hover:bg-base-200 cursor-pointer" onclick="window.location.href='/view/tasks/{{ task.ID }}'">
+        <td>{{ task.Name }}</td>
+        <td>{{ task.Schedule }}</td>
+        <td>{{ task.Message }}</td>
+        <td>
+            {{ if task.Active }}
+                <div class="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-green-100 text-green-800 text-xs font-medium">
+                    <span class="relative flex h-3 w-3">
+                        <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                        <span class="relative inline-flex h-3 w-3 rounded-full bg-emerald-500"></span>
+                    </span>
+                    Active
+                </div>
+            {{ else }}
+                <div class="inline-flex items-center gap-2 px-2 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-medium">
+                    <span class="relative flex h-3 w-3">
+                        <span class="relative inline-flex h-3 w-3 rounded-full bg-gray-400"></span>
+                    </span>
+                    Inactive
+                </div>
+            {{ end }}
+        </td>
+        <th>
+            <button class="btn btn-ghost btn-xs">...</button>
+        </th>
+    </tr>
+{{ end }}

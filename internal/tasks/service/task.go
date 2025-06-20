@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/robfig/cron/v3"
 
+	"github.com/HugManh/cronjob/internal/common"
 	"github.com/HugManh/cronjob/internal/tasks/model"
 	"github.com/HugManh/cronjob/internal/tasks/repository"
 	"github.com/HugManh/cronjob/pkg/taskmanager"
@@ -48,8 +49,8 @@ func (s *TaskService) AddTask(name, schedule, message string) (cron.EntryID, err
 	return id, nil
 }
 
-func (s *TaskService) GetTasks() ([]model.Task, error) {
-	return s.repo.GetAll()
+func (s *TaskService) GetTasks(params common.QueryParams) ([]model.Task, int64, error) {
+	return s.repo.GetAll(params)
 }
 
 func (s *TaskService) GetTaskById(id string) (*model.Task, error) {

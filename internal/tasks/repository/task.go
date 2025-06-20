@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/HugManh/cronjob/internal/common"
 	"github.com/HugManh/cronjob/internal/tasks/model"
 	"gorm.io/gorm"
 )
@@ -17,10 +18,20 @@ func (r *TaskRepo) Create(task *model.Task) error {
 	return r.db.Create(task).Error
 }
 
-func (r *TaskRepo) GetAll() ([]model.Task, error) {
+func (r *TaskRepo) GetAll(params common.QueryParams) ([]model.Task, int64, error) {
 	var tasks []model.Task
-	err := r.db.Find(&tasks).Error
-	return tasks, err
+	var total int64
+	offset := (params.Page - 1) * params.Limit
+
+	r.db.Model(&model.Task{}).Count(&total)
+
+	query := r.db.Model(&model.Task{}).Offset(offset).Limit(params.Limit)
+	if params.Sort != "" {
+		query = query.Order(params.Sort)
+	}
+
+	err := query.Find(&tasks).Error
+	return tasks, total, err
 }
 
 func (r *TaskRepo) GetByID(id string) (*model.Task, error) {

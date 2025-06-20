@@ -1,7 +1,14 @@
 {{  extends "../pages/task.jet"  }}
 
 {{ block table() }}
-    <div class="overflow-x-auto rounded-box border bg-base-100">
+    <div
+        id="task-table"
+        hx-get="/view/tasks/items"
+        hx-trigger="load"
+        hx-target="#task-table-items"
+        hx-swap="innerHTML"
+        class="overflow-x-auto rounded-box border bg-base-100"
+    >
         <table class="table">
             <thead class="bg-base-300">
                 <tr>
@@ -12,8 +19,12 @@
                     <th></th>
                 </tr>
             </thead>
-            <tbody>
-                {{ yield content }}
+            <tbody id="task-table-items">
+                <tr>
+                    <td colspan="5">
+                        <span class="loading loading-dots loading-md"></span>
+                    </td>
+                </tr>
             </tbody>
         </table>
     </div>
@@ -37,23 +48,5 @@
         </a>
     </div>
 
-    {{ yield table() content }}
-        {{ range id, task := . }}
-            <tr class="hover:bg-base-200 cursor-pointer" onclick="window.location.href='/view/tasks/{{ task.ID }}'">
-                <td>{{ task.Name }}</td>
-                <td>{{ task.Schedule }}</td>
-                <td>{{ task.Message }}</td>
-                <td>
-                    {{  if task.Active  }}
-                        <div class="btn btn-soft btn-success">Active</div>
-                    {{  else  }}
-                        <div class="btn btn-soft btn-error">Inactive</div>
-                    {{  end  }}
-                </td>
-                <th>
-                    <button class="btn btn-ghost btn-xs">...</button>
-                </th>
-            </tr>
-        {{ end }}
-    {{ end }}
+    {{ yield table() }}
 {{ end }}

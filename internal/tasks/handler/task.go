@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/HugManh/cronjob/internal/common"
 	"github.com/HugManh/cronjob/internal/tasks/service"
 )
 
@@ -38,12 +39,19 @@ func (h *TaskHandler) Create(c *gin.Context) {
 }
 
 func (h *TaskHandler) GetTasks(c *gin.Context) {
-	tasks, err := h.svc.GetTasks()
+	params := common.ParseQueryParams(c)
+	tasks, total, err := h.svc.GetTasks(params)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "tasks not found"})
 		return
 	}
-	c.JSON(http.StatusOK, tasks)
+	c.JSON(http.StatusOK, gin.H{
+		"data":       tasks,
+		"page":       params.Page,
+		"limit":      params.Limit,
+		"total":      total,
+		"totalPages": (total + int64(params.Limit) - 1) / int64(params.Limit),
+	})
 }
 
 func (h *TaskHandler) GetTaskById(c *gin.Context) {

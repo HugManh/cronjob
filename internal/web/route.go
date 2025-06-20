@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/CloudyKit/jet/v6"
+	"github.com/HugManh/cronjob/internal/common"
 	"github.com/HugManh/cronjob/internal/tasks/repository"
 	"github.com/HugManh/cronjob/internal/tasks/service"
 	"github.com/HugManh/cronjob/pkg/taskmanager"
@@ -35,10 +36,27 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManage
 
 	group := rg.Group("/tasks")
 	group.GET("/", func(c *gin.Context) {
-		fmt.Println(">>> List")
-		tasks, _ := svc.GetTasks()
-
 		tmpl, err := views.GetTemplate("tasks/list.jet")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "template error: %v", err)
+			return
+		}
+
+		err = tmpl.Execute(c.Writer, nil, nil)
+		if err != nil {
+			c.String(http.StatusInternalServerError, fmt.Sprintf("render error: %v", err))
+		}
+	})
+    group.GET("/items", func(c *gin.Context) {
+		fmt.Println(">>> List")
+		params := common.ParseQueryParams(c)
+		tasks, _, err := svc.GetTasks(params)
+		if err != nil {
+			c.String(http.StatusNotFound, "tasks not found: %v", err)
+			return
+		}
+
+		tmpl, err := views.GetTemplate("tasks/items.jet")
 		if err != nil {
 			c.String(http.StatusInternalServerError, "template error: %v", err)
 			return
