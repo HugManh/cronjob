@@ -32,7 +32,7 @@
         </form>
 
         <div class="modal-action mt-4">
-            <button
+            <a
                 class="btn btn-primary mt-4 p-2"
                 hx-post="/api/v1/tasks"
                 hx-ext="json-enc"
@@ -47,7 +47,7 @@
                 "
             >
                 Create
-            </button>
+            </a>
         </div>
     </fieldset>
 {{end}}
