@@ -43,7 +43,7 @@
         </form>
 
         <div class="modal-action mt-4">
-            <button
+            <a
                 class="btn btn-info p-2"
                 hx-put="/api/v1/tasks/{{.ID}}"
                 hx-ext="json-enc"
@@ -59,8 +59,8 @@
                 "
             >
                 Update
-            </button>
-            <button
+            </a>
+            <a
                 class="btn btn-error p-2"
                 hx-delete="/api/v1/tasks/{{.ID}}"
                 hx-trigger="click"
@@ -74,7 +74,7 @@
                 "
             >
                 Delete
-            </button>
+            </a>
         </div>
     </fieldset>
 {{end}}

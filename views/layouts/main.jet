@@ -41,9 +41,9 @@
             --depth: 0;
             --noise: 0;
         }
-        button.btn {
-            background-color: var(--btn-bg) !important;
-        }
+        # button.btn {
+        #     background-color: var(--btn-bg) !important;
+        # }
         </style>
         <title>{{ isset(Title) ? Title : "" }}</title>
     </head>

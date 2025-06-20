@@ -41,12 +41,27 @@
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold">Tasks</h2>
         <a
-            href="/view/tasks/new"
             class="btn btn-primary"
+            onclick="new_task_modal.showModal()"
         >
-            + New Task
+            + New
         </a>
     </div>
-
+    <dialog id="new_task_modal" class="modal">
+        <div class="modal-box">
+            <form method="dialog">
+                <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+            <a
+                class="btn btn-primary"
+                href="/view/tasks/new"
+            >
+                Slack
+            </a>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
     {{ yield table() }}
 {{ end }}
