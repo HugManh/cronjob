@@ -2,11 +2,11 @@ package view
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
+	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
 	"github.com/CloudyKit/jet/v6"
@@ -26,7 +26,7 @@ func Init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Working directory:", cwd)
+	log.Println("Working directory:", cwd)
 }
 
 // Render HTML views
@@ -48,7 +48,6 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManage
 		}
 	})
     group.GET("/items", func(c *gin.Context) {
-		fmt.Println(">>> List")
 		params := common.ParseQueryParams(c)
 		tasks, _, err := svc.GetTasks(params)
 		if err != nil {
@@ -71,7 +70,6 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManage
 		}
 	})
 	group.GET("/new", func(c *gin.Context) {
-		fmt.Println(">>> New")
 		tmpl, err := views.GetTemplate("tasks/new.jet")
 		if err != nil {
 			c.String(http.StatusInternalServerError, "template error: %v", err)
@@ -81,7 +79,6 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManage
 		tmpl.Execute(c.Writer, nil, nil)
 	})
 	group.GET("/:id", func(c *gin.Context) {
-		fmt.Println(">>> id:")
 		id := c.Param("id")
 		task, err := svc.GetTaskById(id)
 		if err != nil {

@@ -2,8 +2,9 @@ package taskmanager
 
 import (
 	"fmt"
-	"log"
 	"sync"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/HugManh/cronjob/internal/tasks/model"
 	"github.com/robfig/cron/v3"

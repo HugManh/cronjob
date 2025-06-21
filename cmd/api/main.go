@@ -1,17 +1,24 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"os"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/HugManh/cronjob/internal/routing"
 	"github.com/HugManh/cronjob/pkg/config"
 	"github.com/HugManh/cronjob/pkg/db"
+	"github.com/HugManh/cronjob/pkg/logger"
 	"github.com/HugManh/cronjob/pkg/taskmanager"
 )
+
+func init() {
+	// Initialize logger
+	godotenv.Load()
+	logger.InitLog()
+}
 
 func main() {
 	config := config.LoadConfig()
@@ -36,7 +43,7 @@ func main() {
 		c.Next()
 	})
 	if err := routing.RegisterRoutes(routing.ServerData{DB: db, TaskManager: tm, Router: router}); err != nil {
-		fmt.Printf("registering routes: %v\n", err)
+		log.Errorf("registering routes: %v\n", err)
 		os.Exit(1)
 	}
 

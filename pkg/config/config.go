@@ -1,8 +1,9 @@
 package config
 
 import (
-	"log"
 	"sync"
+
+    log "github.com/sirupsen/logrus"
 
 	"github.com/caarlos0/env/v10"
 	"github.com/joho/godotenv"

@@ -1,10 +1,11 @@
-package handler
+package dto
 
 import (
 	"fmt"
 	"strings"
 )
 
+// BoolString is a custom type that can unmarshal JSON boolean values
 type BoolString bool
 
 func (b *BoolString) UnmarshalJSON(data []byte) error {

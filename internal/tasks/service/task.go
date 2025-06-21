@@ -2,10 +2,10 @@ package service
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/google/uuid"
 	"github.com/robfig/cron/v3"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/HugManh/cronjob/internal/common"
 	"github.com/HugManh/cronjob/internal/tasks/model"

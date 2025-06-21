@@ -4,11 +4,13 @@ go 1.23.4
 
 require (
 	github.com/CloudyKit/jet/v6 v6.3.1
+	github.com/antonfisher/nested-logrus-formatter v1.3.1
 	github.com/caarlos0/env/v10 v10.0.0
 	github.com/gin-gonic/gin v1.10.1
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/robfig/cron/v3 v3.0.1
+	github.com/sirupsen/logrus v1.9.3
 	github.com/slack-go/slack v0.17.1
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.30.0
