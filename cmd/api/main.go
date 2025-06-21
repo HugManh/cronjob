@@ -37,7 +37,9 @@ func main() {
 		log.Fatalf("Registering tasks from DB failed: %v", err)
 	}
 
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Logger())
+	router.Use(gin.Recovery())
 	router.Use(func(c *gin.Context) {
 		log.Println("[ACCESS] Request >>", c.Request.Method, c.Request.URL.Path)
 		c.Next()
@@ -47,5 +49,5 @@ func main() {
 		os.Exit(1)
 	}
 
-	router.Run(":8080")
+	router.Run(":"+ config.Port) // Start the server
 }

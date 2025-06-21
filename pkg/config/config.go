@@ -3,15 +3,15 @@ package config
 import (
 	"sync"
 
-    log "github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/caarlos0/env/v10"
 	"github.com/joho/godotenv"
 )
 
 type Config struct {
-	AppEnv  string `env:"APP_ENV" envDefault:"development"`
-	AppPort string `env:"APP_PORT" envDefault:"8080"`
+	Port string `env:"PORT" envDefault:"8080"`
+	Env  string `env:"ENVIRONMENT" envDefault:"local"`
 
 	DBHost string `env:"DB_HOST" envDefault:"localhost"`
 	DBPort int    `env:"DB_PORT" envDefault:"5432"`
