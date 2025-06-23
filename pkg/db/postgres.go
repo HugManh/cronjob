@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	mtask "github.com/HugManh/cronjob/internal/tasks/model"
+	mslack "github.com/HugManh/cronjob/internal/slack/model"
 	log "github.com/sirupsen/logrus"
 
 	"gorm.io/driver/postgres"
@@ -58,6 +60,8 @@ func (db *database) Connect() {
 	if err != nil {
 		log.Fatal("connection to postgres failed!: ", err)
 	}
+
+	client.AutoMigrate(&mtask.Task{}, &mslack.Slack{})
 	db.Database = client
 	log.Println("connected to Postgres!")
 }
