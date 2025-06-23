@@ -1,7 +1,10 @@
 package logger
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 
 	nested "github.com/antonfisher/nested-logrus-formatter"
 	log "github.com/sirupsen/logrus"
@@ -16,6 +19,10 @@ func InitLog() {
 		TimestampFormat: "2006-01-02 15:04:05",
 		ShowFullLevel:   true,
 		CallerFirst:     true,
+		CustomCallerFormatter: func(f *runtime.Frame) string {
+			_, filename := filepath.Split(f.File)
+			return fmt.Sprintf(" (%s:%d)", filename, f.Line)
+		},
 	})
 
 }
