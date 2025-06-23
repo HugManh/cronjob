@@ -10,11 +10,13 @@ import (
 )
 
 type Config struct {
-	Port string `env:"PORT" envDefault:"8080"`
-	Env  string `env:"ENVIRONMENT" envDefault:"local"`
-
+	// server
+	ServerHost string `env:"SERVER_HOST" envDefault:"0.0.0.0"`
+	ServerPort uint16 `env:"SERVER_PORT" envDefault:"8080"`
+	Env        string `env:"ENVIRONMENT" envDefault:"local"`
+	// database
 	DBHost string `env:"DB_HOST" envDefault:"localhost"`
-	DBPort int    `env:"DB_PORT" envDefault:"5432"`
+	DBPort uint16 `env:"DB_PORT" envDefault:"5432"`
 	DBUser string `env:"DB_USER" envDefault:"postgres"`
 	DBPass string `env:"DB_PASSWORD" envDefault:""`
 	DBName string `env:"DB_DATABASE" envDefault:"postgres"`

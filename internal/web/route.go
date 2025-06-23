@@ -32,7 +32,7 @@ func Init() {
 // Render HTML views
 func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManager) {
 	repo := repository.NewTaskRepo(db)
-	svc := service.NewTaskService(repo, tm)
+	svc := service.NewService(repo, tm)
 
 	group := rg.Group("/tasks")
 	group.GET("/", func(c *gin.Context) {

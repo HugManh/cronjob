@@ -18,7 +18,7 @@ type TaskService struct {
 	tm   *taskmanager.TaskManager
 }
 
-func NewTaskService(r *repository.TaskRepo, tm *taskmanager.TaskManager) *TaskService {
+func NewService(r *repository.TaskRepo, tm *taskmanager.TaskManager) *TaskService {
 	return &TaskService{repo: r, tm: tm}
 }
 
