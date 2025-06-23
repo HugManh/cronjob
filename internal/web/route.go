@@ -10,7 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/CloudyKit/jet/v6"
-	"github.com/HugManh/cronjob/internal/common"
+	"github.com/HugManh/cronjob/internal/common/request"
 	"github.com/HugManh/cronjob/internal/tasks/repository"
 	"github.com/HugManh/cronjob/internal/tasks/service"
 	"github.com/HugManh/cronjob/pkg/taskmanager"
@@ -47,8 +47,8 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManage
 			c.String(http.StatusInternalServerError, fmt.Sprintf("render error: %v", err))
 		}
 	})
-    group.GET("/items", func(c *gin.Context) {
-		params := common.ParseQueryParams(c)
+	group.GET("/items", func(c *gin.Context) {
+		params := request.ParseQueryParams(c)
 		tasks, _, err := svc.GetTasks(params)
 		if err != nil {
 			c.String(http.StatusNotFound, "tasks not found: %v", err)

@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/HugManh/cronjob/internal/common"
+	"github.com/HugManh/cronjob/internal/common/request"
 	"github.com/HugManh/cronjob/internal/tasks/dto"
 	"github.com/HugManh/cronjob/internal/tasks/service"
 )
@@ -40,7 +40,7 @@ func (h *TaskHandler) Create(c *gin.Context) {
 }
 
 func (h *TaskHandler) GetTasks(c *gin.Context) {
-	params := common.ParseQueryParams(c)
+	params := request.ParseQueryParams(c)
 	tasks, total, err := h.svc.GetTasks(params)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "tasks not found"})

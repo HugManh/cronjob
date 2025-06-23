@@ -1,7 +1,8 @@
 package repository
 
 import (
-	"github.com/HugManh/cronjob/internal/common"
+
+	"github.com/HugManh/cronjob/internal/common/request"
 	"github.com/HugManh/cronjob/internal/tasks/model"
 	"gorm.io/gorm"
 )
@@ -18,7 +19,7 @@ func (r *TaskRepo) Create(task *model.Task) error {
 	return r.db.Create(task).Error
 }
 
-func (r *TaskRepo) GetAll(params common.QueryParams) ([]model.Task, int64, error) {
+func (r *TaskRepo) GetAll(params request.QueryParams) ([]model.Task, int64, error) {
 	var tasks []model.Task
 	var total int64
 	offset := (params.Page - 1) * params.Limit
