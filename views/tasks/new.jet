@@ -32,7 +32,14 @@
 
                 <!-- Option: Every -->
                 <div class="flex items-center space-x-2 mb-2">
-                    <input type="radio" name="execute_mode" value="every" class="radio radio-xs" checked onchange="toggleExecutionOptions()">
+                    <input
+                        type="radio"
+                        name="execute_mode"
+                        value="every"
+                        class="radio radio-xs"
+                        checked
+                        hx-on:change="document.getElementById('every_interval').disabled = false; document.getElementById('cron_expression').disabled = true;"
+                    >
                     <span>Every</span>
                     <select id="every_interval" name="execute" class="select select-bordered ml-2">
                         <option disabled selected value="">Choose an interval</option>
@@ -45,10 +52,23 @@
 
                 <!-- Option: Cron -->
                 <div class="flex items-start space-x-2 mb-2">
-                    <input type="radio" name="execute_mode" value="cron" class="radio radio-xs" onchange="toggleExecutionOptions()">
+                    <input
+                        type="radio"
+                        name="execute_mode"
+                        value="cron"
+                        class="radio radio-xs"
+                        hx-on:change="document.getElementById('every_interval').disabled = true; document.getElementById('cron_expression').disabled = false;"
+                    >
                     <div class="w-full">
                         <span>Cron expression:</span>
-                        <input type="text" id="cron_expression" name="execute" class="input input-bordered w-full mt-1" placeholder="e.g., */5 * * * *">
+                        <input
+                            type="text"
+                            id="cron_expression"
+                            name="execute"
+                            class="input input-bordered w-full mt-1"
+                            placeholder="e.g., */5 * * * *"
+                            disabled
+                        >
                         <a href="#" class="text-blue-400 text-sm mt-1 inline-block">Examples</a>
                     </div>
                 </div>
