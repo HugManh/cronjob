@@ -45,7 +45,7 @@
         #     background-color: var(--btn-bg) !important;
         # }
         </style>
-        <title>{{ isset(Title) ? Title : "" }}</title>
+        <title>{{ isset(Title) ? Title : "Galerry" }}</title>
     </head>
     <body class="flex flex-col min-h-screen m-0">
         {{ yield body() }}
