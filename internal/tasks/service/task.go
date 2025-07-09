@@ -26,12 +26,6 @@ func NewService(r *repository.TaskRepo, tm *taskmanager.TaskManager) *TaskServic
 func (s *TaskService) AddTask(name, schedule, message string) (cron.EntryID, error) {
 	// Đăng ký task
 	hash := uuid.New().String()
-	id, err := s.tm.RegisterTask(hash, name, schedule, message)
-	if err != nil {
-		return 0, err
-	}
-
-	// Lưu vào DB (active = true)
 	task := model.Task{
 		Name:     name,
 		Schedule: schedule,
@@ -40,9 +34,11 @@ func (s *TaskService) AddTask(name, schedule, message string) (cron.EntryID, err
 		Active:   true,
 	}
 	if err := s.repo.Create(&task); err != nil {
-		// Nếu lưu DB lỗi thì rollback cron luôn
-		s.tm.Cron.Remove(id)
-		delete(s.tm.Tasks, id)
+		return 0, err
+	}
+
+	id, err := s.tm.RegisterTask(hash, name, schedule, message)
+	if err != nil {
 		return 0, err
 	}
 

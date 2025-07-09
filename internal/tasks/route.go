@@ -4,16 +4,20 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
+	slackRepo "github.com/HugManh/cronjob/internal/slack/repository"
+	slackService "github.com/HugManh/cronjob/internal/slack/service"
 	"github.com/HugManh/cronjob/internal/tasks/handler"
-	"github.com/HugManh/cronjob/internal/tasks/repository"
-	"github.com/HugManh/cronjob/internal/tasks/service"
+	taskRepo "github.com/HugManh/cronjob/internal/tasks/repository"
+	taskService "github.com/HugManh/cronjob/internal/tasks/service"
 	"github.com/HugManh/cronjob/pkg/taskmanager"
 )
 
 func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManager) {
-	repo := repository.NewTaskRepo(db)
-	svc := service.NewService(repo, tm)
-	h := handler.NewTaskHandler(svc)
+	repoTask := taskRepo.NewTaskRepo(db)
+	repoSlack := slackRepo.NewSlackRepo(db)
+	svcTask := taskService.NewService(repoTask, tm)
+	svcSlack := slackService.NewService(repoSlack)
+	h := handler.NewTaskHandler(svcTask, svcSlack)
 
 	group := rg.Group("/tasks")
 	group.POST("/", h.Create)
