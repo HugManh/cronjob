@@ -10,7 +10,7 @@
     </ul>
 </div>
 
-<div x-data="{ step: 1, mode: 'every' }" class="space-y-6">
+<div x-data="taskForm()" class="space-y-6">
 
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold">New Task</h2>
@@ -23,16 +23,22 @@
 
             <div class="form-control w-full mb-4">
                 <label class="label font-semibold text-md mb-2" for="bot_token">Bot Token</label>
-                <input type="text" id="bot_token" name="bot_token" class="input input-bordered w-full p-2" required>
+                <input type="text" id="bot_token" name="bot_token" x-ref="bot_token" class="input input-bordered w-full p-2">
+                <template x-if="errors.bot_token">
+                    <p class="text-red-500 text-sm mt-1" x-text="errors.bot_token"></p>
+                </template>
             </div>
 
             <div class="form-control w-full mb-4">
                 <label class="label font-semibold text-md mb-2" for="chat_id">Channel/Chat ID</label>
-                <input type="text" id="chat_id" name="chat_id" class="input input-bordered w-full p-2" required>
+                <input type="text" id="chat_id" name="chat_id" x-ref="chat_id" class="input input-bordered w-full p-2">
+                <template x-if="errors.chat_id">
+                    <p class="text-red-500 text-sm mt-1" x-text="errors.chat_id"></p>
+                </template>
             </div>
 
             <div class="flex justify-end">
-                <button type="button" class="btn btn-primary">Next</button>
+                <button type="button" class="btn btn-primary" @click="validateStep1()">Next</button>
             </div>
         </fieldset>
 
@@ -42,12 +48,18 @@
 
             <div class="form-control w-full mb-4">
                 <label class="label font-semibold text-md mb-2" for="name">Name</label>
-                <input type="text" id="name" name="name" class="input input-bordered w-full p-2" required>
+                <input type="text" id="name" name="name" x-ref="name" class="input input-bordered w-full p-2">
+                <template x-if="errors.name">
+                    <p class="text-red-500 text-sm mt-1" x-text="errors.name"></p>
+                </template>
             </div>
 
             <div class="form-control w-full mb-4">
                 <label class="label font-semibold text-md mb-2" for="message">Message</label>
-                <textarea id="message" name="message" class="textarea textarea-bordered w-full p-2" rows="4" required></textarea>
+                <textarea id="message" name="message" x-ref="message" class="textarea textarea-bordered w-full p-2" rows="4"></textarea>
+                <template x-if="errors.message">
+                    <p class="text-red-500 text-sm mt-1" x-text="errors.message"></p>
+                </template>
             </div>
 
             <div class="form-control w-full mb-4">
@@ -57,7 +69,7 @@
                 <div class="flex items-center space-x-2 mb-2">
                     <input type="radio" name="execute_mode" value="every" class="radio radio-xs" x-model="mode">
                     <span>Every</span>
-                    <select id="every_interval" name="execute" class="select select-bordered ml-2" :disabled="mode !== 'every'">
+                    <select id="every_interval" name="execute" x-ref="every_interval" class="select select-bordered ml-2" :disabled="mode !== 'every'">
                         <option disabled selected value="">Choose an interval</option>
                         <option value="*/1 * * * * *">Every 1 second</option>
                         <option value="*/5 * * * * *">Every 5 seconds</option>
@@ -71,11 +83,15 @@
                     <input type="radio" name="execute_mode" value="cron" class="radio radio-xs" x-model="mode">
                     <div class="w-full">
                         <span>Cron expression:</span>
-                        <input type="text" id="cron_expression" name="execute" class="input input-bordered w-full mt-1"
+                        <input type="text" id="cron_expression" name="execute" x-ref="cron_expression" class="input input-bordered w-full mt-1"
                             placeholder="e.g., */5 * * * *" :disabled="mode !== 'cron'">
                         <a href="#" class="text-blue-400 text-sm mt-1 inline-block">Examples</a>
                     </div>
                 </div>
+
+                <template x-if="errors.execute">
+                    <p class="text-red-500 text-sm mt-1" x-text="errors.execute"></p>
+                </template>
             </div>
 
             <div class="form-control w-full mb-4">
@@ -90,26 +106,78 @@
 
             <div class="flex justify-between mt-4">
                 <button type="button" class="btn" @click="step = 1">Back</button>
-                <button
-                    class="btn btn-primary"
-                    type="button"
-                    hx-post="/api/v1/tasks"
-                    hx-ext="json-enc"
-                    hx-include="#newTaskForm"
-                    hx-trigger="click"
-                    hx-swap="none"
-                    hx-on::after-request="
-                        if (event.detail.successful)
-                            { window.location.href = '/view/tasks'; }
-                        else
-                            { alert('Create New Task Failed!'); }
-                    "
-                >
-                    Create
-                </button>
+                <button type="button" class="btn btn-primary" @click="validateAndSubmit()">Create</button>
             </div>
+
+            <!-- Hidden submit for HTMX -->
+            <button
+                type="submit"
+                x-ref="submitBtn"
+                class="hidden"
+                hx-post="/api/v1/tasks"
+                hx-ext="json-enc"
+                hx-include="#newTaskForm"
+                hx-trigger="click"
+                hx-swap="none"
+                hx-on::after-request="
+                    if (event.detail.successful)
+                        { window.location.href = '/view/tasks'; }
+                    else
+                        { alert('Create New Task Failed!'); }
+                "
+            ></button>
         </fieldset>
     </form>
 </div>
+
+<script>
+function taskForm() {
+    return {
+        step: 1,
+        mode: 'every',
+        errors: {},
+
+        validateStep1() {
+            this.errors = {};
+
+            if (!this.$refs.bot_token.value.trim()) {
+                this.errors.bot_token = 'Bot token is required';
+            }
+
+            if (!this.$refs.chat_id.value.trim()) {
+                this.errors.chat_id = 'Chat ID is required';
+            }
+
+            if (Object.keys(this.errors).length === 0) {
+                this.step = 2;
+            }
+        },
+
+        validateAndSubmit() {
+            this.errors = {};
+
+            if (!this.$refs.name.value.trim()) {
+                this.errors.name = 'Name is required';
+            }
+
+            if (!this.$refs.message.value.trim()) {
+                this.errors.message = 'Message is required';
+            }
+
+            const execValue = this.mode === 'every'
+                ? this.$refs.every_interval.value
+                : this.$refs.cron_expression.value;
+
+            if (!execValue) {
+                this.errors.execute = 'Execution time is required';
+            }
+
+            if (Object.keys(this.errors).length === 0) {
+                this.$refs.submitBtn.click();
+            }
+        }
+    };
+}
+</script>
 
 {{end}}
