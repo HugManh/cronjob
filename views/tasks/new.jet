@@ -1,21 +1,45 @@
-{{  extends "../pages/task.jet"  }}
+{{ extends "../pages/task.jet" }}
 
 {{block documentBody()}}
-    <div class="breadcrumbs text-sm mb-4">
-        <ul>
-            <li><a href="/view">Home</a></li>
-            <li><a href="/view/tasks">Tasks</a></li>
-            <li>New</li>
-        </ul>
-    </div>
+
+<div class="breadcrumbs text-sm mb-4">
+    <ul>
+        <li><a href="/view">Home</a></li>
+        <li><a href="/view/tasks">Tasks</a></li>
+        <li>New</li>
+    </ul>
+</div>
+
+<div x-data="{ step: 1, mode: 'every' }" class="space-y-6">
 
     <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-bold">New Task</h2>
     </div>
 
     <form id="newTaskForm" class="space-y-6 rounded-box border p-4">
-        <fieldset class="fieldset bg-base-200 rounded-box w-xs border p-4">
-            <legend class="fieldset-legend">Job</legend>
+        <!-- Step 1 -->
+        <fieldset x-show="step === 1" x-cloak x-transition class="fieldset bg-base-200 rounded-box border p-4">
+            <legend class="fieldset-legend">1. Slack Configuration</legend>
+
+            <div class="form-control w-full mb-4">
+                <label class="label font-semibold text-md mb-2" for="bot_token">Bot Token</label>
+                <input type="text" id="bot_token" name="bot_token" class="input input-bordered w-full p-2" required>
+            </div>
+
+            <div class="form-control w-full mb-4">
+                <label class="label font-semibold text-md mb-2" for="chat_id">Channel/Chat ID</label>
+                <input type="text" id="chat_id" name="chat_id" class="input input-bordered w-full p-2" required>
+            </div>
+
+            <div class="flex justify-end">
+                <button type="button" class="btn btn-primary">Next</button>
+            </div>
+        </fieldset>
+
+        <!-- Step 2 -->
+        <fieldset x-show="step === 2" x-cloak x-transition class="fieldset bg-base-200 rounded-box border p-4">
+            <legend class="fieldset-legend">2. Task Information</legend>
+
             <div class="form-control w-full mb-4">
                 <label class="label font-semibold text-md mb-2" for="name">Name</label>
                 <input type="text" id="name" name="name" class="input input-bordered w-full p-2" required>
@@ -27,22 +51,13 @@
             </div>
 
             <div class="form-control w-full mb-4">
-                <!-- Radio group -->
-                <label class="label font-semibold text-md mb-2">When to execute <span class="text-gray-500">(Required)</span></label>
+                <label class="label font-semibold text-md mb-2">When to execute</label>
 
-                <!-- Option: Every -->
+                <!-- Every -->
                 <div class="flex items-center space-x-2 mb-2">
-                    <input
-                        type="radio"
-                        name="execute_mode"
-                        value="every"
-                        class="radio radio-xs"
-                        checked
-                        hx-on:change="document.getElementById('every_interval').disabled = false; document.getElementById('cron_expression').disabled = true;"
-                        required
-                    >
+                    <input type="radio" name="execute_mode" value="every" class="radio radio-xs" x-model="mode">
                     <span>Every</span>
-                    <select id="every_interval" name="execute" class="select select-bordered ml-2" required>
+                    <select id="every_interval" name="execute" class="select select-bordered ml-2" :disabled="mode !== 'every'">
                         <option disabled selected value="">Choose an interval</option>
                         <option value="*/1 * * * * *">Every 1 second</option>
                         <option value="*/5 * * * * *">Every 5 seconds</option>
@@ -51,27 +66,13 @@
                     </select>
                 </div>
 
-                <!-- Option: Cron -->
+                <!-- Cron -->
                 <div class="flex items-start space-x-2 mb-2">
-                    <input
-                        type="radio"
-                        name="execute_mode"
-                        value="cron"
-                        class="radio radio-xs"
-                        hx-on:change="document.getElementById('every_interval').disabled = true; document.getElementById('cron_expression').disabled = false;"
-                        required
-                    >
+                    <input type="radio" name="execute_mode" value="cron" class="radio radio-xs" x-model="mode">
                     <div class="w-full">
                         <span>Cron expression:</span>
-                        <input
-                            type="text"
-                            id="cron_expression"
-                            name="execute"
-                            class="input input-bordered w-full mt-1"
-                            placeholder="e.g., */5 * * * *"
-                            disabled
-                            required
-                        >
+                        <input type="text" id="cron_expression" name="execute" class="input input-bordered w-full mt-1"
+                            placeholder="e.g., */5 * * * *" :disabled="mode !== 'cron'">
                         <a href="#" class="text-blue-400 text-sm mt-1 inline-block">Examples</a>
                     </div>
                 </div>
@@ -80,44 +81,35 @@
             <div class="form-control w-full mb-4">
                 <label class="label font-semibold text-md mb-2">Timezone <span class="text-gray-500">(Optional)</span></label>
                 <div class="flex items-start space-x-2 mb-2">
-                    <input type="radio" name="timezone" value="asia/bangkok" class="radio radio-xs" checked onchange="toggleExecutionOptions()">
+                    <input type="radio" name="timezone" value="asia/bangkok" class="radio radio-xs" checked>
                     <div class="w-full">
                         <span>Default timezone of your account (Asia/Bangkok)</span>
                     </div>
                 </div>
             </div>
+
+            <div class="flex justify-between mt-4">
+                <button type="button" class="btn" @click="step = 1">Back</button>
+                <button
+                    class="btn btn-primary"
+                    type="button"
+                    hx-post="/api/v1/tasks"
+                    hx-ext="json-enc"
+                    hx-include="#newTaskForm"
+                    hx-trigger="click"
+                    hx-swap="none"
+                    hx-on::after-request="
+                        if (event.detail.successful)
+                            { window.location.href = '/view/tasks'; }
+                        else
+                            { alert('Create New Task Failed!'); }
+                    "
+                >
+                    Create
+                </button>
+            </div>
         </fieldset>
-
-        <fieldset class="fieldset bg-base-200 rounded-box w-xs border p-4">
-            <legend class="fieldset-legend">Configuration</legend>
-                <div class="form-control w-full mb-4">
-                    <label class="label font-semibold text-md mb-2" for="bot_token">Bot Token</label>
-                    <input type="text" id="bot_token" name="bot_token" class="input input-bordered w-full p-2" required>
-                </div>
-
-                <div class="form-control w-full mb-4">
-                    <label class="label font-semibold text-md mb-2" for="chat_id">Channel/Chat ID</label>
-                    <input type="text" id="chat_id" name="chat_id" class="input input-bordered w-full p-2" required>
-                </div>
-        </fieldset>
-
-        <div class="modal-action mt-4">
-            <a
-                class="btn btn-primary mt-4 p-2"
-                hx-post="/api/v1/tasks"
-                hx-ext="json-enc"
-                hx-include="#newTaskForm"
-                hx-trigger="click"
-                hx-swap="none"
-                hx-on::after-request="
-                if (event.detail.successful)
-                    { window.location.href = '/view/tasks'; }
-                else
-                    { alert('Create New Task Failed!'); }
-                "
-            >
-                Create
-            </a>
-        </div>
     </form>
+</div>
+
 {{end}}
