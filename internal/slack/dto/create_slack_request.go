@@ -5,8 +5,8 @@ import (
 )
 
 type CreateSlackRequest struct {
-	BotToken string `json:"bot_token"`
-	ChatID   string `json:"chat_id"`
+	BotToken string `json:"botToken"`
+	ChatID   string `json:"chatID"`
 }
 
 func (r CreateSlackRequest) Validate() error {

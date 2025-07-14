@@ -1,0 +1,5 @@
+{{ range id, slack := . }}
+    <tr class="hover:bg-base-200 cursor-pointer">
+        <td>{{ slack.BotToken }}</td>
+    </tr>
+{{ end }}

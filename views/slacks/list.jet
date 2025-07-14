@@ -1,11 +1,11 @@
-{{  extends "../pages/task"  }}
+{{  extends "../pages/slack"  }}
 
 {{ block table() }}
     <div
-        id="task-table"
-        hx-get="/view/tasks/items"
+        id="slack-table"
+        hx-get="/view/slacks/items"
         hx-trigger="load"
-        hx-target="#task-table-items"
+        hx-target="#slack-table-items"
         hx-swap="innerHTML"
         class="overflow-x-auto rounded-box border bg-base-100"
     >
@@ -13,13 +13,9 @@
             <thead class="bg-base-300">
                 <tr>
                     <th>Name</th>
-                    <th>Schedule</th>
-                    <th>Message</th>
-                    <td>Status</td>
-                    <th></th>
                 </tr>
             </thead>
-            <tbody id="task-table-items">
+            <tbody id="slack-table-items">
                 <tr>
                     <td colspan="5">
                         <span class="loading loading-dots loading-md"></span>
@@ -34,12 +30,12 @@
     <div class="breadcrumbs text-sm mb-4">
         <ul>
             <li><a href="/view">Home</a></li>
-            <li><a href="/view/tasks">Tasks</a></li>
+            <li><a href="/view/slacks">slacks</a></li>
         </ul>
     </div>
 
     <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-bold">Tasks</h2>
+        <h2 class="text-xl font-bold">slacks</h2>
         <a
             class="btn btn-primary"
             onclick="new_task_modal.showModal()"
@@ -54,7 +50,7 @@
             </form>
             <a
                 class="btn btn-primary"
-                href="/view/tasks/new"
+                href="/view/slacks/new"
             >
                 Slack
             </a>

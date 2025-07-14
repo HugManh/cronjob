@@ -11,8 +11,10 @@ import (
 
 	"github.com/CloudyKit/jet/v6"
 	"github.com/HugManh/cronjob/internal/common/request"
-	"github.com/HugManh/cronjob/internal/tasks/repository"
-	"github.com/HugManh/cronjob/internal/tasks/service"
+	repository1 "github.com/HugManh/cronjob/internal/slack/repository"
+	service1 "github.com/HugManh/cronjob/internal/slack/service"
+	repository "github.com/HugManh/cronjob/internal/tasks/repository"
+	service "github.com/HugManh/cronjob/internal/tasks/service"
 	"github.com/HugManh/cronjob/pkg/taskmanager"
 )
 
@@ -33,10 +35,12 @@ func Init() {
 func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManager) {
 	repo := repository.NewTaskRepo(db)
 	svc := service.NewService(repo, tm)
+	repo1 := repository1.NewSlackRepo(db)
+	svc1 := service1.NewService(repo1)
 
-	group := rg.Group("/tasks")
-	group.GET("/", func(c *gin.Context) {
-		tmpl, err := views.GetTemplate("tasks/list.jet")
+	tasks := rg.Group("/tasks")
+	tasks.GET("/", func(c *gin.Context) {
+		tmpl, err := views.GetTemplate("tasks/list")
 		if err != nil {
 			c.String(http.StatusInternalServerError, "template error: %v", err)
 			return
@@ -47,7 +51,7 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManage
 			c.String(http.StatusInternalServerError, fmt.Sprintf("render error: %v", err))
 		}
 	})
-	group.GET("/items", func(c *gin.Context) {
+	tasks.GET("/items", func(c *gin.Context) {
 		params := request.ParseQueryParams(c)
 		tasks, _, err := svc.GetTasks(params)
 		if err != nil {
@@ -55,7 +59,7 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManage
 			return
 		}
 
-		tmpl, err := views.GetTemplate("tasks/items.jet")
+		tmpl, err := views.GetTemplate("tasks/items")
 		if err != nil {
 			c.String(http.StatusInternalServerError, "template error: %v", err)
 			return
@@ -69,8 +73,8 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManage
 			c.String(http.StatusInternalServerError, fmt.Sprintf("render error: %v", err))
 		}
 	})
-	group.GET("/new", func(c *gin.Context) {
-		tmpl, err := views.GetTemplate("tasks/new.jet")
+	tasks.GET("/new", func(c *gin.Context) {
+		tmpl, err := views.GetTemplate("tasks/new")
 		if err != nil {
 			c.String(http.StatusInternalServerError, "template error: %v", err)
 			return
@@ -78,7 +82,7 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManage
 
 		tmpl.Execute(c.Writer, nil, nil)
 	})
-	group.GET("/:id", func(c *gin.Context) {
+	tasks.GET("/:id", func(c *gin.Context) {
 		id := c.Param("id")
 		task, err := svc.GetTaskById(id)
 		if err != nil {
@@ -86,7 +90,7 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManage
 			return
 		}
 
-		tmpl, err := views.GetTemplate("tasks/detail.jet")
+		tmpl, err := views.GetTemplate("tasks/detail")
 		if err != nil {
 			c.String(http.StatusInternalServerError, "template error: %v", err)
 			return
@@ -99,6 +103,40 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManage
 		if err != nil {
 			c.String(http.StatusInternalServerError, fmt.Sprintf("render error: %v", err))
 		}
+	})
+
+	slacks := rg.Group("/slacks")
+	slacks.GET("/", func(c *gin.Context) {
+		tmpl, err := views.GetTemplate("slacks/list")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "template error: %v", err)
+			return
+		}
+
+		err = tmpl.Execute(c.Writer, nil, nil)
+		fmt.Printf("render error: %v", err)
+	})
+	slacks.GET("/items", func(c *gin.Context) {
+		params := request.ParseQueryParams(c)
+		slacks, _, err := svc1.GetSlacks(params)
+		if err != nil {
+			c.String(http.StatusNotFound, "slacks not found: %v", err)
+			return
+		}
+
+		fmt.Printf("---------- %+v", slacks)
+
+		tmpl, err := views.GetTemplate("slacks/items")
+		if err != nil {
+			c.String(http.StatusInternalServerError, "template error: %v", err)
+			return
+		}
+
+		vars := make(jet.VarMap)
+		vars.Set("slacks", slacks)
+
+		err = tmpl.Execute(c.Writer, vars, slacks)
+        fmt.Printf("render error: %v", err)
 	})
 
 }
