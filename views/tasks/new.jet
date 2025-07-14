@@ -106,46 +106,32 @@
 
             <div class="flex justify-between mt-4">
                 <button type="button" class="btn" @click="step = 1">Back</button>
-                <button type="button" class="btn btn-primary" @click="validateAndSubmit()">Create</button>
+                <button type="button" class="btn btn-primary" :disabled="isLoading" @click="validateAndSubmit()">
+                    <span x-text="isLoading ? 'Creating...' : 'Create'"></span>
+                </button>
             </div>
 
-            <!-- Hidden submit for HTMX -->
-            <button
-                type="submit"
-                x-ref="submitBtn"
-                class="hidden"
-                hx-post="/api/v1/tasks"
-                hx-ext="json-enc"
-                hx-include="#newTaskForm"
-                hx-trigger="click"
-                hx-swap="none"
-                hx-on::after-request="
-                    if (event.detail.successful)
-                        { window.location.href = '/view/tasks'; }
-                    else
-                        { alert('Create New Task Failed!'); }
-                "
-            ></button>
         </fieldset>
     </form>
 </div>
 
 <script>
-function taskForm() {
+window.taskForm = function () {
     return {
         step: 1,
-        mode: 'every',
+        mode: "every",
         errors: {},
+        isLoading: false,
 
         validateStep1() {
             this.errors = {};
 
             if (!this.$refs.bot_token.value.trim()) {
-                this.errors.bot_token = 'Bot token is required';
+                this.errors.bot_token = "Bot token is required";
             }
 
             if (!this.$refs.chat_id.value.trim()) {
-                this.errors.chat_id = 'Chat ID is required';
+                this.errors.chat_id = "Chat ID is required";
             }
 
             if (Object.keys(this.errors).length === 0) {
@@ -153,27 +139,69 @@ function taskForm() {
             }
         },
 
-        validateAndSubmit() {
+        async validateAndSubmit() {
             this.errors = {};
 
-            if (!this.$refs.name.value.trim()) {
-                this.errors.name = 'Name is required';
-            }
-
-            if (!this.$refs.message.value.trim()) {
-                this.errors.message = 'Message is required';
-            }
-
-            const execValue = this.mode === 'every'
+            const bot_token = this.$refs.bot_token.value.trim();
+            const chat_id = this.$refs.chat_id.value.trim();
+            const name = this.$refs.name.value.trim();
+            const message = this.$refs.message.value.trim();
+            const execute = this.mode === 'every'
                 ? this.$refs.every_interval.value
                 : this.$refs.cron_expression.value;
 
-            if (!execValue) {
-                this.errors.execute = 'Execution time is required';
-            }
+            if (!name) this.errors.name = "Name is required";
+            if (!message) this.errors.message = "Message is required";
+            if (!execute) this.errors.execute = "Execution time is required";
 
-            if (Object.keys(this.errors).length === 0) {
-                this.$refs.submitBtn.click();
+            if (Object.keys(this.errors).length > 0) return;
+
+            this.isLoading = true;
+
+            try {
+                const res1 = await fetch("/api/v1/slacks", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        bot_token,
+                        chat_id,
+                    }),
+                });
+
+                if (!res1.ok) {
+                    const err1 = await res1.json();
+                    throw new Error(err1.message || "Failed to create Slack config");
+                }
+
+                const slackConfig = await res1.json();
+                const slack_config_id = slackConfig.id;
+
+                const res2 = await fetch("/api/v1/tasks", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        name,
+                        message,
+                        execute,
+                        mode: this.mode,
+                        slack_config_id,
+                    }),
+                });
+
+                if (!res2.ok) {
+                    const err2 = await res2.json();
+                    throw new Error(err2.message || "Failed to create task");
+                }
+
+                window.location.href = "/view/tasks";
+            } catch (err) {
+                alert(err.message || "Something went wrong");
+            } finally {
+                this.isLoading = false;
             }
         }
     };

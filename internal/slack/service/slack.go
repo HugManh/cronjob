@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/HugManh/cronjob/internal/common/request"
+	"github.com/HugManh/cronjob/internal/slack/dto"
 	"github.com/HugManh/cronjob/internal/slack/model"
 	"github.com/HugManh/cronjob/internal/slack/repository"
 )
@@ -15,10 +16,14 @@ func NewService(r *repository.SlackRepo) *SlackService {
 }
 
 // AddSlack adds a new task to the cron scheduler and saves it to the database
-func (s *SlackService) CreateSlack(bot_token, chat_id string) error {
+func (s *SlackService) CreateSlack(req dto.CreateSlackRequest) error {
+	if err := req.Validate(); err != nil {
+		return err
+	}
+
 	slack := &model.Slack{
-		BotToken: bot_token,
-		ChatID:   chat_id,
+		BotToken: req.BotToken,
+		ChatID:   req.ChatID,
 	}
 
 	if err := s.repo.Create(slack); err != nil {

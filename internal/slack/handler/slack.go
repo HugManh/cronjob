@@ -20,7 +20,7 @@ func NewSlackHandler(s *service.SlackService) *SlackHandler {
 
 // Create handles the creation of a new Slack configuration
 func (h *SlackHandler) Create(c *gin.Context) {
-	var req dto.AddSlackRequest
+	var req dto.CreateSlackRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{
 			"success": false,
@@ -30,7 +30,7 @@ func (h *SlackHandler) Create(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.CreateSlack(req.BotToken, req.ChatID); err != nil {
+	if err := h.service.CreateSlack(req); err != nil {
 		c.JSON(400, gin.H{
 			"success": false,
 			"message": "Invalid request",
