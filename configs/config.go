@@ -1,4 +1,4 @@
-package config
+package configs
 
 import (
 	"sync"
@@ -10,11 +10,11 @@ import (
 )
 
 type Config struct {
-	// server
+	// Server
 	ServerHost string `env:"SERVER_HOST" envDefault:"0.0.0.0"`
 	ServerPort uint16 `env:"SERVER_PORT" envDefault:"8080"`
 	Env        string `env:"ENVIRONMENT" envDefault:"local"`
-	// database
+	// Database
 	DBHost string `env:"DB_HOST" envDefault:"localhost"`
 	DBPort uint16 `env:"DB_PORT" envDefault:"5432"`
 	DBUser string `env:"DB_USER" envDefault:"postgres"`

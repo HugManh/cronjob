@@ -3,7 +3,7 @@
 {{block documentBody()}}
     <div class="breadcrumbs text-sm mb-4">
         <ul>
-            <li><a href="/view">Home</a></li>
+            <li><a href="/view/tasks">Home</a></li>
             <li><a href="/view/tasks">Tasks</a></li>
             <li><a href="/view/tasks/{{.ID}}">{{.Name}}</a></li>
         </ul>
@@ -23,8 +23,8 @@
             </div>
 
             <div class="form-control w-full mt-4">
-                <label class="label mb-2" for="schedule">Schedule</label>
-                <input type="text" id="schedule" name="schedule" class="input input-bordered w-full p-2" placeholder="e.g., * * * * *" value="{{.Schedule}}" required>
+                <label class="label mb-2" for="execute">Execute</label>
+                <input type="text" id="execute" name="execute" class="input input-bordered w-full p-2" placeholder="e.g., * * * * *" value="{{.Execute}}" required>
             </div>
 
             <div class="form-control w-full mt-4">

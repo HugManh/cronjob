@@ -1,9 +1,10 @@
 package repository
 
 import (
-	"github.com/HugManh/cronjob/internal/common/request"
-	"github.com/HugManh/cronjob/internal/slack/model"
 	"gorm.io/gorm"
+
+	"github.com/HugManh/cronjob/internal/model"
+	"github.com/HugManh/cronjob/pkg/https"
 )
 
 type SlackRepo struct {
@@ -18,7 +19,7 @@ func (r *SlackRepo) Create(Slack *model.Slack) error {
 	return r.db.Create(Slack).Error
 }
 
-func (r *SlackRepo) GetAll(params request.QueryParams) ([]model.Slack, int64, error) {
+func (r *SlackRepo) GetAll(params https.QueryParams) ([]model.Slack, int64, error) {
 	var Slacks []model.Slack
 	var total int64
 	offset := (params.Page - 1) * params.Limit

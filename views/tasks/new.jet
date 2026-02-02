@@ -4,7 +4,7 @@
 
 <div class="breadcrumbs text-sm mb-4">
     <ul>
-        <li><a href="/view">Home</a></li>
+        <li><a href="/view/tasks">Home</a></li>
         <li><a href="/view/tasks">Tasks</a></li>
         <li>New</li>
     </ul>
@@ -73,8 +73,8 @@
                         <option disabled selected value="">Choose an interval</option>
                         <option value="*/1 * * * * *">Every 1 second</option>
                         <option value="*/5 * * * * *">Every 5 seconds</option>
-                        <option value="0 * * * *">Every hour</option>
-                        <option value="0 0 * * *">Every day</option>
+                        <option value="@hourly">Every hour</option>
+                        <option value="@daily">Every day</option>
                     </select>
                 </div>
 

@@ -4,25 +4,23 @@ import (
 	"fmt"
 	"net/http"
 
+	dto_tasks "github.com/HugManh/cronjob/internal/dto/tasks"
+	"github.com/HugManh/cronjob/internal/service"
+	"github.com/HugManh/cronjob/pkg/https"
 	"github.com/gin-gonic/gin"
-
-	"github.com/HugManh/cronjob/internal/common/request"
-	"github.com/HugManh/cronjob/internal/tasks/dto"
-	slackService "github.com/HugManh/cronjob/internal/slack/service"
-	taskService "github.com/HugManh/cronjob/internal/tasks/service"
 )
 
 type TaskHandler struct {
-	svcTask  *taskService.TaskService
-	svcSlack *slackService.SlackService
+	svcTask  *service.TaskService
+	svcSlack *service.SlackService
 }
 
-func NewTaskHandler(svcTask *taskService.TaskService, svcSlack *slackService.SlackService) *TaskHandler {
+func NewTaskHandler(svcTask *service.TaskService, svcSlack *service.SlackService) *TaskHandler {
 	return &TaskHandler{svcTask: svcTask, svcSlack: svcSlack}
 }
 
 func (h *TaskHandler) Create(c *gin.Context) {
-	var req dto.AddTaskRequest
+	var req dto_tasks.AddTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
@@ -32,7 +30,7 @@ func (h *TaskHandler) Create(c *gin.Context) {
 		return
 	}
 
-	id, err := h.svcTask.AddTask(req.Name, req.Schedule, req.Message)
+	id, err := h.svcTask.AddTask(req.Name, req.Execute, req.Message)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -42,7 +40,7 @@ func (h *TaskHandler) Create(c *gin.Context) {
 }
 
 func (h *TaskHandler) GetTasks(c *gin.Context) {
-	params := request.ParseQueryParams(c)
+	params := https.ParseQueryParams(c)
 	tasks, total, err := h.svcTask.GetTasks(params)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "tasks not found"})
@@ -69,12 +67,12 @@ func (h *TaskHandler) GetTaskById(c *gin.Context) {
 
 func (h *TaskHandler) Update(c *gin.Context) {
 	id := c.Param("id")
-	var req dto.AddTaskRequest
+	var req dto_tasks.AddTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
-	if err := h.svcTask.UpdateTask(id, req.Name, req.Schedule, req.Message, bool(*req.Active)); err != nil {
+	if err := h.svcTask.UpdateTask(id, req.Name, req.Execute, req.Message, bool(*req.Active)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

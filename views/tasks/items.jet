@@ -1,7 +1,7 @@
 {{ range id, task := . }}
     <tr class="hover:bg-base-200 cursor-pointer" onclick="window.location.href='/view/tasks/{{ task.ID }}'">
         <td>{{ task.Name }}</td>
-        <td>{{ task.Schedule }}</td>
+        <td>{{ task.Execute }}</td>
         <td>{{ task.Message }}</td>
         <td>
             {{ if task.Active }}

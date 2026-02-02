@@ -2,19 +2,17 @@ package view
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
+	"github.com/CloudyKit/jet/v6"
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	"github.com/CloudyKit/jet/v6"
-	"github.com/HugManh/cronjob/internal/common/request"
-	repository1 "github.com/HugManh/cronjob/internal/slack/repository"
-	service1 "github.com/HugManh/cronjob/internal/slack/service"
-	repository "github.com/HugManh/cronjob/internal/tasks/repository"
-	service "github.com/HugManh/cronjob/internal/tasks/service"
+	"github.com/HugManh/cronjob/internal/repository"
+	"github.com/HugManh/cronjob/internal/service"
+	"github.com/HugManh/cronjob/pkg/https"
 	"github.com/HugManh/cronjob/pkg/taskmanager"
 )
 
@@ -34,9 +32,9 @@ func Init() {
 // Render HTML views
 func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManager) {
 	repo := repository.NewTaskRepo(db)
-	svc := service.NewService(repo, tm)
-	repo1 := repository1.NewSlackRepo(db)
-	svc1 := service1.NewService(repo1)
+	svc := service.NewService2(repo, tm)
+	repo1 := repository.NewSlackRepo(db)
+	svc1 := service.NewService1(repo1)
 
 	tasks := rg.Group("/tasks")
 	tasks.GET("/", func(c *gin.Context) {
@@ -52,7 +50,7 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManage
 		}
 	})
 	tasks.GET("/items", func(c *gin.Context) {
-		params := request.ParseQueryParams(c)
+		params := https.ParseQueryParams(c)
 		tasks, _, err := svc.GetTasks(params)
 		if err != nil {
 			c.String(http.StatusNotFound, "tasks not found: %v", err)
@@ -117,7 +115,7 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManage
 		fmt.Printf("render error: %v", err)
 	})
 	slacks.GET("/items", func(c *gin.Context) {
-		params := request.ParseQueryParams(c)
+		params := https.ParseQueryParams(c)
 		slacks, _, err := svc1.GetSlacks(params)
 		if err != nil {
 			c.String(http.StatusNotFound, "slacks not found: %v", err)
@@ -136,7 +134,7 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManage
 		vars.Set("slacks", slacks)
 
 		err = tmpl.Execute(c.Writer, vars, slacks)
-        fmt.Printf("render error: %v", err)
+		fmt.Printf("render error: %v", err)
 	})
 
 }

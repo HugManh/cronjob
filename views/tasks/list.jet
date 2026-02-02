@@ -13,7 +13,7 @@
             <thead class="bg-base-300">
                 <tr>
                     <th>Name</th>
-                    <th>Schedule</th>
+                    <th>Execute</th>
                     <th>Message</th>
                     <td>Status</td>
                     <th></th>
@@ -33,7 +33,7 @@
 {{ block documentBody() }}
     <div class="breadcrumbs text-sm mb-4">
         <ul>
-            <li><a href="/view">Home</a></li>
+            <li><a href="/view/tasks">Home</a></li>
             <li><a href="/view/tasks">Tasks</a></li>
         </ul>
     </div>

@@ -1,10 +1,10 @@
 package repository
 
 import (
-
-	"github.com/HugManh/cronjob/internal/common/request"
-	"github.com/HugManh/cronjob/internal/tasks/model"
 	"gorm.io/gorm"
+
+	"github.com/HugManh/cronjob/internal/model"
+	"github.com/HugManh/cronjob/pkg/https"
 )
 
 type TaskRepo struct {
@@ -19,7 +19,7 @@ func (r *TaskRepo) Create(task *model.Task) error {
 	return r.db.Create(task).Error
 }
 
-func (r *TaskRepo) GetAll(params request.QueryParams) ([]model.Task, int64, error) {
+func (r *TaskRepo) GetAll(params https.QueryParams) ([]model.Task, int64, error) {
 	var tasks []model.Task
 	var total int64
 	offset := (params.Page - 1) * params.Limit
@@ -52,7 +52,7 @@ func (r *TaskRepo) GetTaskByActive(isActive bool) ([]model.Task, error) {
 func (r *TaskRepo) Update(task *model.Task) error {
 	return r.db.Model(&model.Task{}).
 		Where("id = ?", task.ID).
-		Select("Name", "Schedule", "Message", "Hash", "Active").
+		Select("Name", "Execute", "Message", "Hash", "Active").
 		Updates(task).Error
 }
 

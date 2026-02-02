@@ -1,4 +1,4 @@
-package dto
+package dto_tasks
 
 import (
 	"fmt"
@@ -25,8 +25,8 @@ func (b *BoolString) UnmarshalJSON(data []byte) error {
 }
 
 type AddTaskRequest struct {
-	Name     string      `json:"name"`
-	Schedule string      `json:"schedule"` // vd: "*/10 * * * * *"
-	Message  string      `json:"message"`
-	Active   *BoolString `json:"active"`
+	Name    string      `json:"name"`
+	Execute string      `json:"execute"` // vd: "*/10 * * * * *"
+	Message string      `json:"message"`
+	Active  *BoolString `json:"active"`
 }

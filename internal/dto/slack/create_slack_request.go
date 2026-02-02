@@ -1,12 +1,12 @@
-package dto
+package dto_slack
 
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 
 type CreateSlackRequest struct {
-	BotToken string `json:"botToken"`
-	ChatID   string `json:"chatID"`
+	BotToken string `json:"bot_token"`
+	ChatID   string `json:"chat_id"`
 }
 
 func (r CreateSlackRequest) Validate() error {

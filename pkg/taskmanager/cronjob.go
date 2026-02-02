@@ -6,17 +6,17 @@ import (
 
 	log "github.com/sirupsen/logrus"
 
-	"github.com/HugManh/cronjob/internal/tasks/model"
+	"github.com/HugManh/cronjob/internal/model"
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
 
 type Task struct {
-	ID       cron.EntryID
-	Hash     string
-	Name     string
-	Schedule string
-	Message  string
+	ID      cron.EntryID
+	Hash    string
+	Name    string
+	Execute string
+	Message string
 }
 
 type TaskManager struct {
@@ -41,8 +41,8 @@ func (tm *TaskManager) LoadTasksFromDB(db *gorm.DB) error {
 	}
 
 	for _, t := range tasks {
-		log.Printf("Loading task from DB: Name: %s Schedule: %s Message: %s Hash: %s", t.Name, t.Schedule, t.Message, t.Hash)
-		_, err := tm.RegisterTask(t.Hash, t.Name, t.Schedule, t.Message)
+		log.Printf("Loading task from DB: Name: %s Execute: %s Message: %s Hash: %s", t.Name, t.Execute, t.Message, t.Hash)
+		_, err := tm.RegisterTask(t.Hash, t.Name, t.Execute, t.Message)
 		if err != nil {
 			log.Printf("Failed to add task %s: %v", t.Name, err)
 		}
@@ -52,7 +52,7 @@ func (tm *TaskManager) LoadTasksFromDB(db *gorm.DB) error {
 }
 
 // Register a new task in the cron scheduler
-func (tm *TaskManager) RegisterTask(hash, name, schedule, message string) (cron.EntryID, error) {
+func (tm *TaskManager) RegisterTask(hash, name, execute, message string) (cron.EntryID, error) {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
@@ -63,7 +63,7 @@ func (tm *TaskManager) RegisterTask(hash, name, schedule, message string) (cron.
 		}
 	}
 
-	id, err := tm.Cron.AddFunc(schedule, func() {
+	id, err := tm.Cron.AddFunc(execute, func() {
 		log.Printf("[TASK %s][%s] %s", hash, name, message)
 	})
 	if err != nil {
@@ -71,14 +71,14 @@ func (tm *TaskManager) RegisterTask(hash, name, schedule, message string) (cron.
 	}
 
 	tm.Tasks[id] = Task{
-		ID:       id,
-		Hash:     hash,
-		Name:     name,
-		Schedule: schedule,
-		Message:  message,
+		ID:      id,
+		Hash:    hash,
+		Name:    name,
+		Execute: execute,
+		Message: message,
 	}
 
-	log.Printf("✅ Registered task: %s | %s", name, schedule)
+	log.Printf("✅ Registered task: %s | %s", name, execute)
 	return id, nil
 }
 
@@ -88,7 +88,7 @@ func (tm *TaskManager) RemoveTaskFromCronByHash(taskHash string) error {
 	defer tm.mu.Unlock()
 
 	for id, t := range tm.Tasks {
-		if t.Hash == taskHash { //
+		if t.Hash == taskHash {
 			log.Printf("Checking task: %v against %s\n", t, taskHash)
 			tm.Cron.Remove(id)
 			delete(tm.Tasks, id)

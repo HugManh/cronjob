@@ -1,11 +1,10 @@
 package handler
 
 import (
+	dto_slack "github.com/HugManh/cronjob/internal/dto/slack"
+	"github.com/HugManh/cronjob/internal/service"
+	"github.com/HugManh/cronjob/pkg/https"
 	"github.com/gin-gonic/gin"
-
-	"github.com/HugManh/cronjob/internal/common/request"
-	"github.com/HugManh/cronjob/internal/slack/dto"
-	"github.com/HugManh/cronjob/internal/slack/service"
 )
 
 // SlackHandler handles Slack-related HTTP requests
@@ -20,7 +19,7 @@ func NewSlackHandler(s *service.SlackService) *SlackHandler {
 
 // Create handles the creation of a new Slack configuration
 func (h *SlackHandler) Create(c *gin.Context) {
-	var req dto.CreateSlackRequest
+	var req dto_slack.CreateSlackRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(400, gin.H{
 			"success": false,
@@ -44,7 +43,7 @@ func (h *SlackHandler) Create(c *gin.Context) {
 
 // GetSlacks handles retrieving all Slack configurations
 func (h *SlackHandler) GetSlacks(c *gin.Context) {
-	params := request.ParseQueryParams(c)
+	params := https.ParseQueryParams(c)
 	slacks, total, err := h.service.GetSlacks(params)
 	if err != nil {
 		c.JSON(404, gin.H{"error": "Slacks not found"})
