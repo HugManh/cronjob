@@ -8,13 +8,12 @@ import (
 	"github.com/HugManh/cronjob/internal/repository"
 	"github.com/HugManh/cronjob/internal/service"
 	view "github.com/HugManh/cronjob/internal/web"
-	"github.com/HugManh/cronjob/pkg/taskmanager"
 )
 
 type ServerData struct {
 	DB          *gorm.DB
 	Router      *gin.Engine
-	TaskManager *taskmanager.TaskManager
+	TaskManager *service.TaskManager
 }
 
 func registerRoutes(ser *ServerData) error {
@@ -30,7 +29,7 @@ func registerRoutes(ser *ServerData) error {
 	return nil
 }
 
-func Routes1(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManager) {
+func Routes1(rg *gin.RouterGroup, db *gorm.DB, tm *service.TaskManager) {
 	repoTask := repository.NewTaskRepo(db)
 	repoSlack := repository.NewSlackRepo(db)
 	svcTask := service.NewService2(repoTask, tm)

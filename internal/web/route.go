@@ -2,9 +2,10 @@ package view
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/CloudyKit/jet/v6"
 	"github.com/gin-gonic/gin"
@@ -13,7 +14,6 @@ import (
 	"github.com/HugManh/cronjob/internal/repository"
 	"github.com/HugManh/cronjob/internal/service"
 	"github.com/HugManh/cronjob/pkg/https"
-	"github.com/HugManh/cronjob/pkg/taskmanager"
 )
 
 var views = jet.NewSet(
@@ -30,7 +30,7 @@ func Init() {
 }
 
 // Render HTML views
-func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *taskmanager.TaskManager) {
+func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *service.TaskManager) {
 	repo := repository.NewTaskRepo(db)
 	svc := service.NewService2(repo, tm)
 	repo1 := repository.NewSlackRepo(db)

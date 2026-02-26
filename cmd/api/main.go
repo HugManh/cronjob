@@ -10,7 +10,7 @@ import (
 func init() {
 	// Initialize logger
 	godotenv.Load()
-	logger.NewLogger(&logger.Config{})
+	logger.NewLogger()
 }
 
 func main() {

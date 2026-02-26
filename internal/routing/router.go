@@ -4,11 +4,10 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/HugManh/cronjob/internal/service"
+	"github.com/gin-gonic/gin"
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-
-	"github.com/HugManh/cronjob/pkg/taskmanager"
-	"github.com/gin-gonic/gin"
 )
 
 type BaseRouter interface {
@@ -18,7 +17,7 @@ type BaseRouter interface {
 
 type Router interface {
 	BaseRouter
-	LoadControllers(*gorm.DB, *taskmanager.TaskManager)
+	LoadControllers(*gorm.DB, *service.TaskManager)
 }
 
 type router struct {
@@ -34,7 +33,7 @@ func NewRouter(mode string) Router {
 	return &r
 }
 
-func (r *router) LoadControllers(db *gorm.DB, tm *taskmanager.TaskManager) {
+func (r *router) LoadControllers(db *gorm.DB, tm *service.TaskManager) {
 	r.engine.Use(func(c *gin.Context) {
 		log.Println("[ACCESS] Request >>", c.Request.Method, c.Request.URL.Path)
 		c.Next()

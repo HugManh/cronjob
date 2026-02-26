@@ -1,4 +1,4 @@
-package taskmanager
+package service
 
 import (
 	"fmt"
@@ -33,18 +33,29 @@ func NewTaskManager() *TaskManager {
 	}
 }
 
-func (tm *TaskManager) LoadTasksFromDB(db *gorm.DB) error {
+const invalid_task = "000001"
+
+func (tm *TaskManager) Startup(db *gorm.DB) error {
 	var tasks []model.Task
 	if err := db.Where("active = ?", true).Find(&tasks).Error; err != nil {
-		log.Printf("Failed to load tasks from DB: %v", err)
+		log.Errorf("Failed to load tasks from DB: %v", err)
 		return err
 	}
 
 	for _, t := range tasks {
-		log.Printf("Loading task from DB: Name: %s Execute: %s Message: %s Hash: %s", t.Name, t.Execute, t.Message, t.Hash)
+		log.Infof("Loading task from DB: Name: %s Execute: %s Message: %s Hash: %s", t.Name, t.Execute, t.Message, t.Hash)
 		_, err := tm.RegisterTask(t.Hash, t.Name, t.Execute, t.Message)
 		if err != nil {
-			log.Printf("Failed to add task %s: %v", t.Name, err)
+			log.Infof("Failed to add task %s: %v", t.Name, err)
+			// Nếu task không hợp lệ, đánh dấu nó là inactive để tránh lỗi khi khởi động lại
+			if err := db.Model(&model.Task{}).
+				Where("id = ?", t.ID).
+				Updates(map[string]interface{}{
+					"active": false,
+					"code":   invalid_task,
+				}).Error; err != nil {
+				log.Errorf("Failed to update task %s to inactive: %v", t.Name, err)
+			}
 		}
 	}
 
@@ -64,7 +75,7 @@ func (tm *TaskManager) RegisterTask(hash, name, execute, message string) (cron.E
 	}
 
 	id, err := tm.Cron.AddFunc(execute, func() {
-		log.Printf("[TASK %s][%s] %s", hash, name, message)
+		log.Infof("[TASK %s][%s] %s", hash, name, message)
 	})
 	if err != nil {
 		return 0, err
@@ -78,7 +89,7 @@ func (tm *TaskManager) RegisterTask(hash, name, execute, message string) (cron.E
 		Message: message,
 	}
 
-	log.Printf("✅ Registered task: %s | %s", name, execute)
+	log.Infof("✅ Registered task: %s | %s", name, execute)
 	return id, nil
 }
 
@@ -89,14 +100,14 @@ func (tm *TaskManager) RemoveTaskFromCronByHash(taskHash string) error {
 
 	for id, t := range tm.Tasks {
 		if t.Hash == taskHash {
-			log.Printf("Checking task: %v against %s\n", t, taskHash)
+			log.Infof("Checking task: %v against %s\n", t, taskHash)
 			tm.Cron.Remove(id)
 			delete(tm.Tasks, id)
-			log.Printf("✅ Removed task with hash %s from cron", taskHash)
+			log.Infof("✅ Removed task with hash %s from cron", taskHash)
 			return nil
 		}
 	}
 
-	log.Printf("⚠️ Task with hash %s not found in cron", taskHash)
+	log.Infof("⚠️ Task with hash %s not found in cron", taskHash)
 	return fmt.Errorf("task with hash %s not found in cron", taskHash)
 }

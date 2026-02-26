@@ -2,22 +2,22 @@ package service
 
 import (
 	"fmt"
-	"log"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/HugManh/cronjob/internal/model"
 	"github.com/HugManh/cronjob/internal/repository"
 	"github.com/HugManh/cronjob/pkg/https"
-	"github.com/HugManh/cronjob/pkg/taskmanager"
 	"github.com/google/uuid"
 	"github.com/robfig/cron/v3"
 )
 
 type TaskService struct {
 	repo *repository.TaskRepo
-	tm   *taskmanager.TaskManager
+	tm   *TaskManager
 }
 
-func NewService2(r *repository.TaskRepo, tm *taskmanager.TaskManager) *TaskService {
+func NewService2(r *repository.TaskRepo, tm *TaskManager) *TaskService {
 	return &TaskService{repo: r, tm: tm}
 }
 
@@ -69,10 +69,10 @@ func (s *TaskService) SetTaskActiveStatus(id string, active bool) error {
 		if err != nil {
 			return fmt.Errorf("failed to execute task: %v", err)
 		}
-		s.tm.Tasks[entryID] = taskmanager.Task{Hash: task.Hash}
+		s.tm.Tasks[entryID] = Task{Hash: task.Hash}
 	} else {
 		if err := s.tm.RemoveTaskFromCronByHash(task.Hash); err != nil {
-			return fmt.Errorf("failed to remove task: %v", err)
+			log.Warnf("failed to remove task: %v", err)
 		}
 	}
 
@@ -94,7 +94,7 @@ func (s *TaskService) UpdateTask(id string, name, execute, message string, activ
 
 	if task.Active {
 		if err := s.tm.RemoveTaskFromCronByHash(task.Hash); err != nil {
-			return fmt.Errorf("failed to remove task: %v", err)
+			log.Warnf("failed to remove task: %v", err)
 		}
 	}
 
@@ -103,6 +103,7 @@ func (s *TaskService) UpdateTask(id string, name, execute, message string, activ
 	task.Execute = execute
 	task.Message = message
 	task.Active = active
+	task.Code = ""
 	if err := s.repo.Update(task); err != nil {
 		return fmt.Errorf("failed to update task in DB: %v", err)
 	}
@@ -126,7 +127,7 @@ func (s *TaskService) DeleteTask(id string) error {
 
 	if task.Active {
 		if err := s.tm.RemoveTaskFromCronByHash(task.Hash); err != nil {
-			return fmt.Errorf("failed to remove task: %v", err)
+			log.Warnf("failed to remove task: %v", err)
 		}
 	}
 

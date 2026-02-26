@@ -52,7 +52,7 @@ func (r *TaskRepo) GetTaskByActive(isActive bool) ([]model.Task, error) {
 func (r *TaskRepo) Update(task *model.Task) error {
 	return r.db.Model(&model.Task{}).
 		Where("id = ?", task.ID).
-		Select("Name", "Execute", "Message", "Hash", "Active").
+		Select("Name", "Execute", "Message", "Hash", "Active", "Code").
 		Updates(task).Error
 }
 

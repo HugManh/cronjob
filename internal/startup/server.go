@@ -1,12 +1,12 @@
 package startup
 
 import (
-	"log"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/HugManh/cronjob/configs"
 	"github.com/HugManh/cronjob/internal/routing"
+	"github.com/HugManh/cronjob/internal/service"
 	"github.com/HugManh/cronjob/pkg/db/postgres"
-	"github.com/HugManh/cronjob/pkg/taskmanager"
 )
 
 type Shutdown = func()
@@ -45,11 +45,12 @@ func create(cfg *configs.Config) (routing.Router, Shutdown) {
 	}
 
 	// Init TaskManager
-	tm := taskmanager.NewTaskManager()
+	tm := service.NewTaskManager()
 	tm.Cron.Start()
 
 	// Register tasks from DB
-	if err := tm.LoadTasksFromDB(db.DB()); err != nil {
+	log.Info("Loading tasks from database...")
+	if err := tm.Startup(db.DB()); err != nil {
 		log.Fatalf("Registering tasks from DB failed: %v", err)
 	}
 
