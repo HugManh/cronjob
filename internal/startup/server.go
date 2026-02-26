@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/HugManh/cronjob/configs"
-	"github.com/HugManh/cronjob/internal/network"
+	"github.com/HugManh/cronjob/internal/routing"
 	"github.com/HugManh/cronjob/pkg/db/postgres"
 	"github.com/HugManh/cronjob/pkg/taskmanager"
 )
@@ -21,7 +21,7 @@ func Server() {
 
 }
 
-func create(cfg *configs.Config) (network.Router, Shutdown) {
+func create(cfg *configs.Config) (routing.Router, Shutdown) {
 
 	// Init Database
 	config := postgres.Config{
@@ -53,7 +53,7 @@ func create(cfg *configs.Config) (network.Router, Shutdown) {
 		log.Fatalf("Registering tasks from DB failed: %v", err)
 	}
 
-	router := network.NewRouter("debug")
+	router := routing.NewRouter("debug")
 	router.LoadControllers(db.DB(), tm)
 
 	shutdown := func() {

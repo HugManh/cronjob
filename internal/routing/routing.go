@@ -17,7 +17,7 @@ type ServerData struct {
 	TaskManager *taskmanager.TaskManager
 }
 
-func RegisterRoutes(ser ServerData) error {
+func registerRoutes(ser *ServerData) error {
 
 	r := ser.Router
 	vg := r.Group("view")

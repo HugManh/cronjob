@@ -1,4 +1,4 @@
-package network
+package routing
 
 import (
 	"fmt"
@@ -7,7 +7,6 @@ import (
 	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
-	"github.com/HugManh/cronjob/internal/routing"
 	"github.com/HugManh/cronjob/pkg/taskmanager"
 	"github.com/gin-gonic/gin"
 )
@@ -40,12 +39,11 @@ func (r *router) LoadControllers(db *gorm.DB, tm *taskmanager.TaskManager) {
 		log.Println("[ACCESS] Request >>", c.Request.Method, c.Request.URL.Path)
 		c.Next()
 	})
-	if err := routing.RegisterRoutes(
-		routing.ServerData{
-			DB:          db,
-			TaskManager: tm,
-			Router:      r.engine,
-		}); err != nil {
+	if err := registerRoutes(&ServerData{
+		DB:          db,
+		TaskManager: tm,
+		Router:      r.engine,
+	}); err != nil {
 		log.Errorf("registering routes: %v\n", err)
 		os.Exit(1)
 	}
