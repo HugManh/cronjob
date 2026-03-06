@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	log "github.com/sirupsen/logrus"
 
@@ -10,6 +11,14 @@ import (
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
+
+const maxLogEntries = 50
+
+// LogEntry represents a single task execution log
+type LogEntry struct {
+	Time    string `json:"time"`
+	Message string `json:"message"`
+}
 
 type Task struct {
 	ID      cron.EntryID
@@ -20,17 +29,48 @@ type Task struct {
 }
 
 type TaskManager struct {
-	DB    *gorm.DB
-	Cron  *cron.Cron
-	Tasks map[cron.EntryID]Task
-	mu    sync.Mutex
+	DB       *gorm.DB
+	Cron     *cron.Cron
+	Tasks    map[cron.EntryID]Task
+	TaskLogs map[string][]LogEntry // keyed by task hash
+	mu       sync.Mutex
 }
 
 func NewTaskManager() *TaskManager {
 	return &TaskManager{
-		Cron:  cron.New(cron.WithSeconds()),
-		Tasks: make(map[cron.EntryID]Task),
+		Cron:     cron.New(cron.WithSeconds()),
+		Tasks:    make(map[cron.EntryID]Task),
+		TaskLogs: make(map[string][]LogEntry),
 	}
+}
+
+// AddLog appends a log entry for a task hash, keeping only the last maxLogEntries
+func (tm *TaskManager) AddLog(hash, message string) {
+	tm.mu.Lock()
+	defer tm.mu.Unlock()
+	entry := LogEntry{
+		Time:    time.Now().Format("2006-01-02 15:04:05"),
+		Message: message,
+	}
+	logs := tm.TaskLogs[hash]
+	logs = append(logs, entry)
+	if len(logs) > maxLogEntries {
+		logs = logs[len(logs)-maxLogEntries:]
+	}
+	tm.TaskLogs[hash] = logs
+}
+
+// GetLogs returns log entries for a given task hash (most recent first)
+func (tm *TaskManager) GetLogs(hash string) []LogEntry {
+	tm.mu.Lock()
+	defer tm.mu.Unlock()
+	logs := tm.TaskLogs[hash]
+	// Return a reversed copy so newest is first
+	result := make([]LogEntry, len(logs))
+	for i, e := range logs {
+		result[len(logs)-1-i] = e
+	}
+	return result
 }
 
 const invalid_task = "000001"
@@ -47,7 +87,6 @@ func (tm *TaskManager) Startup(db *gorm.DB) error {
 		_, err := tm.RegisterTask(t.Hash, t.Name, t.Execute, t.Message)
 		if err != nil {
 			log.Infof("Failed to add task %s: %v", t.Name, err)
-			// Nếu task không hợp lệ, đánh dấu nó là inactive để tránh lỗi khi khởi động lại
 			if err := db.Model(&model.Task{}).
 				Where("id = ?", t.ID).
 				Updates(map[string]interface{}{
@@ -62,12 +101,12 @@ func (tm *TaskManager) Startup(db *gorm.DB) error {
 	return nil
 }
 
-// Register a new task in the cron scheduler
+// RegisterTask adds a task to the cron scheduler and wires up log capture
 func (tm *TaskManager) RegisterTask(hash, name, execute, message string) (cron.EntryID, error) {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()
 
-	// Check trùng tên
+	// Check for duplicate hash
 	for _, task := range tm.Tasks {
 		if task.Hash == hash {
 			return 0, fmt.Errorf("task name '%s' already exists", name)
@@ -75,7 +114,9 @@ func (tm *TaskManager) RegisterTask(hash, name, execute, message string) (cron.E
 	}
 
 	id, err := tm.Cron.AddFunc(execute, func() {
-		log.Infof("[TASK %s][%s] %s", hash, name, message)
+		msg := fmt.Sprintf("[TASK %s][%s] %s", hash, name, message)
+		log.Info(msg)
+		tm.AddLog(hash, message)
 	})
 	if err != nil {
 		return 0, err
@@ -93,7 +134,7 @@ func (tm *TaskManager) RegisterTask(hash, name, execute, message string) (cron.E
 	return id, nil
 }
 
-// Remove task in the cron scheduler
+// RemoveTaskFromCronByHash removes a task from the cron scheduler by its hash
 func (tm *TaskManager) RemoveTaskFromCronByHash(taskHash string) error {
 	tm.mu.Lock()
 	defer tm.mu.Unlock()

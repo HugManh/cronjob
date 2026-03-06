@@ -19,6 +19,13 @@ type ServerData struct {
 func registerRoutes(ser *ServerData) error {
 
 	r := ser.Router
+
+	// User UI routes (Served from root)
+	r.StaticFile("/", "./public/index.html")
+	r.StaticFile("/style.css", "./public/style.css")
+	r.StaticFile("/app.js", "./public/app.js")
+
+	// View routes
 	vg := r.Group("view")
 	view.RegisterRoutes(vg, ser.DB, ser.TaskManager)
 
@@ -26,6 +33,24 @@ func registerRoutes(ser *ServerData) error {
 	api := r.Group("/api/v1")
 	Routes1(api, ser.DB, ser.TaskManager)
 	Routes2(api, ser.DB)
+
+	// 404 handler for routes that don't exist
+	r.NoRoute(func(c *gin.Context) {
+		c.JSON(404, gin.H{
+			"error": "Route not found",
+			"path":  c.Request.URL.Path,
+		})
+	})
+
+	// 405 handler for method not allowed
+	r.NoMethod(func(c *gin.Context) {
+		c.JSON(405, gin.H{
+			"error":  "Method not allowed",
+			"method": c.Request.Method,
+			"path":   c.Request.URL.Path,
+		})
+	})
+
 	return nil
 }
 
@@ -40,6 +65,7 @@ func Routes1(rg *gin.RouterGroup, db *gorm.DB, tm *service.TaskManager) {
 	group.POST("/", h.Create)
 	group.GET("/", h.GetTasks)
 	group.GET("/:id", h.GetTaskById)
+	group.GET("/:id/logs", h.GetTaskLogs)
 	group.PUT("/:id", h.Update)
 	group.DELETE("/:id", h.Delete)
 	group.POST("/:id/active", h.UpdateStatus)

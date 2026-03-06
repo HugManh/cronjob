@@ -1,14 +1,14 @@
 version: 2
 updates:
-  - package-ecosystem: "npm"
+  - package-ecosystem: "gomod"
     directory: "/"
     schedule:
       interval: "weekly"
-    groups:
-      production-dependencies:
-        applies-to: "version-updates"
-        patterns:
-          - "*"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "go"
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
@@ -18,3 +18,14 @@ updates:
         applies-to: "version-updates"
         patterns:
           - "*"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "docker"

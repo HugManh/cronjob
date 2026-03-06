@@ -52,6 +52,10 @@ func (s *TaskService) GetTaskById(id string) (*model.Task, error) {
 	return s.repo.GetByID(id)
 }
 
+func (s *TaskService) GetTaskLogs(hash string) []LogEntry {
+	return s.tm.GetLogs(hash)
+}
+
 func (s *TaskService) SetTaskActiveStatus(id string, active bool) error {
 	task, err := s.repo.GetByID(id)
 	if err != nil {
@@ -78,7 +82,16 @@ func (s *TaskService) SetTaskActiveStatus(id string, active bool) error {
 
 	// Cập nhật DB: đặt active
 	task.Active = active
-	return s.repo.Update(task)
+	if err := s.repo.Update(task); err != nil {
+		return err
+	}
+
+	statusStr := "ACTIVE"
+	if !active {
+		statusStr = "INACTIVE"
+	}
+	s.tm.AddLog(task.Hash, fmt.Sprintf("System: Task is now %s", statusStr))
+	return nil
 }
 
 func (s *TaskService) UpdateTask(id string, name, execute, message string, active bool) error {
@@ -107,6 +120,12 @@ func (s *TaskService) UpdateTask(id string, name, execute, message string, activ
 	if err := s.repo.Update(task); err != nil {
 		return fmt.Errorf("failed to update task in DB: %v", err)
 	}
+
+	statusStr := "ACTIVE"
+	if !active {
+		statusStr = "INACTIVE"
+	}
+	s.tm.AddLog(task.Hash, fmt.Sprintf("System: Task is now %s", statusStr))
 
 	// Đăng ký lại vào cron nếu đang active
 	if task.Active {

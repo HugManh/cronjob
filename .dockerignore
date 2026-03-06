@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Build artifacts
+bin/
+tmp/
+
+# Logs
+*.log
+log/
+
+# Environment
+.env
+.env.*
+!.env.template
+
+# Test artifacts
+*.test
+*.out
+coverage.*
+
+# Editor/IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Documentation (not needed at runtime)
+*.md

@@ -20,6 +20,15 @@ profile.cov
 # Dependency directories (remove the comment below to include it)
 vendor/
 
+# Compiled Object files, Static and Dynamic libs (Shared Objects)
+*.o
+*.a
+*.so
+
+# OS General
+Thumbs.db
+.DS_Store
+
 # Go workspace file
 go.work
 go.work.sum
@@ -27,9 +36,16 @@ go.work.sum
 # env file
 .env
 
+# project
+*.cert
+*.key
+*.log
+# bin/*
+!bin/.gitkeep
+
 # Editor/IDE
-.idea/
 .vscode/
+.idea/
+*.swp
 
 tmp/
-log/

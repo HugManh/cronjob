@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronjob Manager</title>
+    <!-- Use Google Fonts (Inter) for modern typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="app-background"></div>
+    <div class="app-container">
+        
+        <header class="app-header">
+            <div>
+                <h1>Cronjob Manager</h1>
+                <p>Manage and monitor your automated tasks beautifully.</p>
+            </div>
+            <button class="btn btn-primary" id="open-new-task-modal">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="icon" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 5V19M5 12H19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                New Task
+            </button>
+        </header>
+
+        <main class="content">
+            <div id="loading" class="loading-spinner"></div>
+            <div class="task-grid" id="task-grid" style="display: none;">
+                <!-- Tasks will be injected here via JS -->
+            </div>
+            <div class="empty-state" id="empty-state" style="display: none;">
+                <div class="empty-icon">📂</div>
+                <h3>No tasks found</h3>
+                <p>Create your first automated cronjob task to get started.</p>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- Modal for New/Edit Task -->
+    <div class="modal-overlay" id="task-modal">
+        <div class="modal glass-panel">
+            <div class="modal-header">
+                <h2 id="modal-title">Create New Task</h2>
+                <button class="btn-icon" id="close-modal">&times;</button>
+            </div>
+            <form id="task-form">
+                <input type="hidden" id="task-id">
+                
+                <div class="form-group">
+                    <label for="task-name">Task Name</label>
+                    <input type="text" id="task-name" required placeholder="e.g., Daily Database Backup">
+                </div>
+                
+                <div class="form-group">
+                    <label for="task-execute">Cron Expression</label>
+                    <input type="text" id="task-execute" required placeholder="e.g., 0 0 * * *">
+                    <small class="help-text">Standard 5-part cron format (Minute Hour DayOfMonth Month DayOfWeek)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="task-message">Message/Command</label>
+                    <textarea id="task-message" required placeholder="e.g., curl -X POST https://api.my-app.com/backup"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="save-task-btn">Save Task</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div class="toast" id="toast">
+        <div class="toast-message" id="toast-message">Task created successfully!</div>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+</html>

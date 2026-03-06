@@ -65,6 +65,17 @@ func (h *TaskHandler) GetTaskById(c *gin.Context) {
 	c.JSON(http.StatusOK, task)
 }
 
+func (h *TaskHandler) GetTaskLogs(c *gin.Context) {
+	id := c.Param("id")
+	task, err := h.svcTask.GetTaskById(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "task not found"})
+		return
+	}
+	logs := h.svcTask.GetTaskLogs(task.Hash)
+	c.JSON(http.StatusOK, gin.H{"data": logs})
+}
+
 func (h *TaskHandler) Update(c *gin.Context) {
 	id := c.Param("id")
 	var req dto_tasks.AddTaskRequest
