@@ -3,11 +3,10 @@ package service
 import (
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/HugManh/cronjob/internal/model"
 	"github.com/HugManh/cronjob/internal/repository"
 	"github.com/HugManh/cronjob/pkg/httpx"
+	"github.com/HugManh/cronjob/pkg/logger"
 	"github.com/google/uuid"
 )
 
@@ -36,7 +35,7 @@ func (s *TaskService) AddTask(name, execute, message string) (*model.Task, error
 
 	if _, err := s.tm.RegisterTask(hash, name, execute, message); err != nil {
 		if deleteErr := s.repo.Delete(fmt.Sprint(task.ID)); deleteErr != nil {
-			log.Warnf("failed to rollback task %d after cron registration error: %v", task.ID, deleteErr)
+			logger.Warnf("failed to rollback task %d after cron registration error: %v", task.ID, deleteErr)
 		}
 		return nil, fmt.Errorf("failed to register task in cron: %+v", err)
 	}
@@ -63,7 +62,7 @@ func (s *TaskService) SetTaskActiveStatus(id string, active bool) error {
 	}
 
 	if task.Active == active {
-		log.Printf("task with id %s is already in desired state", id)
+		logger.Infof("task with id %s is already in desired state", id)
 		return nil
 	}
 
@@ -73,7 +72,7 @@ func (s *TaskService) SetTaskActiveStatus(id string, active bool) error {
 		}
 	} else {
 		if err := s.tm.RemoveTaskFromCronByHash(task.Hash); err != nil {
-			log.Warnf("failed to remove task: %v", err)
+			logger.Warnf("failed to remove task: %v", err)
 		}
 	}
 
@@ -103,7 +102,7 @@ func (s *TaskService) UpdateTask(id string, name, execute, message string, activ
 	wasActive := task.Active
 	if wasActive {
 		if err := s.tm.RemoveTaskFromCronByHash(task.Hash); err != nil {
-			log.Warnf("failed to remove task: %v", err)
+			logger.Warnf("failed to remove task: %v", err)
 		}
 	}
 
@@ -115,7 +114,7 @@ func (s *TaskService) UpdateTask(id string, name, execute, message string, activ
 	if err := s.repo.Update(task); err != nil {
 		if wasActive {
 			if _, registerErr := s.tm.RegisterTask(task.Hash, task.Name, task.Execute, task.Message); registerErr != nil {
-				log.Warnf("failed to restore cron task after update error: %v", registerErr)
+				logger.Warnf("failed to restore cron task after update error: %v", registerErr)
 			}
 		}
 		return fmt.Errorf("failed to update task in DB: %v", err)
@@ -132,7 +131,7 @@ func (s *TaskService) UpdateTask(id string, name, execute, message string, activ
 		statusStr = "INACTIVE"
 	}
 	s.tm.AddLog(task.Hash, fmt.Sprintf("System: Task is now %s", statusStr))
-	log.Printf("updated task: %s", name)
+	logger.Infof("updated task: %s", name)
 	return nil
 }
 
@@ -144,7 +143,7 @@ func (s *TaskService) DeleteTask(id string) error {
 
 	if task.Active {
 		if err := s.tm.RemoveTaskFromCronByHash(task.Hash); err != nil {
-			log.Warnf("failed to remove task: %v", err)
+			logger.Warnf("failed to remove task: %v", err)
 		}
 	}
 

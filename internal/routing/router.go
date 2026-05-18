@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/HugManh/cronjob/internal/service"
+	"github.com/HugManh/cronjob/pkg/logger"
 	"github.com/gin-gonic/gin"
-	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -35,7 +35,7 @@ func NewRouter(mode string) Router {
 
 func (r *router) LoadControllers(db *gorm.DB, tm *service.TaskManager) {
 	r.engine.Use(func(c *gin.Context) {
-		log.Println("[ACCESS] Request >>", c.Request.Method, c.Request.URL.Path)
+		logger.Infof("[ACCESS] Request >> %s %s", c.Request.Method, c.Request.URL.Path)
 		c.Next()
 	})
 	if err := registerRoutes(&ServerData{
@@ -43,7 +43,7 @@ func (r *router) LoadControllers(db *gorm.DB, tm *service.TaskManager) {
 		TaskManager: tm,
 		Router:      r.engine,
 	}); err != nil {
-		log.Errorf("registering routes: %v\n", err)
+		logger.Errorf("registering routes: %v", err)
 		os.Exit(1)
 	}
 }

@@ -37,6 +37,34 @@ func Configure(config Config) error {
 	return nil
 }
 
+func Info(args ...any) {
+	log.Info(args...)
+}
+
+func Infof(format string, args ...any) {
+	log.Infof(format, args...)
+}
+
+func Printf(format string, args ...any) {
+	log.Printf(format, args...)
+}
+
+func Warnf(format string, args ...any) {
+	log.Warnf(format, args...)
+}
+
+func Errorf(format string, args ...any) {
+	log.Errorf(format, args...)
+}
+
+func Fatal(args ...any) {
+	log.Fatal(args...)
+}
+
+func Fatalf(format string, args ...any) {
+	log.Fatalf(format, args...)
+}
+
 func parseLevel(value string) log.Level {
 	level, err := log.ParseLevel(value)
 	if err != nil {

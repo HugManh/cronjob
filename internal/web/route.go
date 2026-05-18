@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"os"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/CloudyKit/jet/v6"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -14,6 +12,7 @@ import (
 	"github.com/HugManh/cronjob/internal/repository"
 	"github.com/HugManh/cronjob/internal/service"
 	"github.com/HugManh/cronjob/pkg/httpx"
+	"github.com/HugManh/cronjob/pkg/logger"
 )
 
 var views = jet.NewSet(
@@ -24,9 +23,9 @@ var views = jet.NewSet(
 func Init() {
 	cwd, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
-	log.Println("Working directory:", cwd)
+	logger.Infof("working directory: %s", cwd)
 }
 
 // Render HTML views

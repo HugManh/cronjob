@@ -4,7 +4,7 @@ import (
 	"strings"
 	"sync"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/HugManh/cronjob/pkg/logger"
 	"github.com/spf13/viper"
 )
 
@@ -44,13 +44,13 @@ func Load() *Config {
 
 		if err := v.ReadInConfig(); err != nil {
 			if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
-				log.Fatalf("failed to read config file: %v", err)
+				logger.Fatalf("failed to read config file: %v", err)
 			}
 		}
 
 		config := &Config{}
 		if err := v.Unmarshal(config); err != nil {
-			log.Fatalf("failed to unmarshal config: %v", err)
+			logger.Fatalf("failed to unmarshal config: %v", err)
 		}
 
 		config.normalize()

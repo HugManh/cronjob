@@ -5,9 +5,8 @@ import (
 	"sync"
 	"time"
 
-	log "github.com/sirupsen/logrus"
-
 	"github.com/HugManh/cronjob/internal/model"
+	"github.com/HugManh/cronjob/pkg/logger"
 	"github.com/robfig/cron/v3"
 	"gorm.io/gorm"
 )
@@ -78,22 +77,22 @@ const invalidTaskCode = "000001"
 func (tm *TaskManager) Startup(db *gorm.DB) error {
 	var tasks []model.Task
 	if err := db.Where("active = ?", true).Find(&tasks).Error; err != nil {
-		log.Errorf("Failed to load tasks from DB: %v", err)
+		logger.Errorf("failed to load tasks from DB: %v", err)
 		return err
 	}
 
 	for _, t := range tasks {
-		log.Infof("Loading task from DB: Name: %s Execute: %s Message: %s Hash: %s", t.Name, t.Execute, t.Message, t.Hash)
+		logger.Infof("loading task from DB: name=%s execute=%s hash=%s", t.Name, t.Execute, t.Hash)
 		_, err := tm.RegisterTask(t.Hash, t.Name, t.Execute, t.Message)
 		if err != nil {
-			log.Infof("Failed to add task %s: %v", t.Name, err)
+			logger.Warnf("failed to add task %s: %v", t.Name, err)
 			if err := db.Model(&model.Task{}).
 				Where("id = ?", t.ID).
 				Updates(map[string]interface{}{
 					"active": false,
 					"code":   invalidTaskCode,
 				}).Error; err != nil {
-				log.Errorf("Failed to update task %s to inactive: %v", t.Name, err)
+				logger.Errorf("failed to update task %s to inactive: %v", t.Name, err)
 			}
 		}
 	}
@@ -115,7 +114,7 @@ func (tm *TaskManager) RegisterTask(hash, name, execute, message string) (cron.E
 
 	id, err := tm.Cron.AddFunc(execute, func() {
 		msg := fmt.Sprintf("[TASK %s][%s] %s", hash, name, message)
-		log.Info(msg)
+		logger.Info(msg)
 		tm.AddLog(hash, message)
 	})
 	if err != nil {
@@ -130,7 +129,7 @@ func (tm *TaskManager) RegisterTask(hash, name, execute, message string) (cron.E
 		Message: message,
 	}
 
-	log.Infof("registered task: %s | %s", name, execute)
+	logger.Infof("registered task: %s | %s", name, execute)
 	return id, nil
 }
 
@@ -141,14 +140,14 @@ func (tm *TaskManager) RemoveTaskFromCronByHash(taskHash string) error {
 
 	for id, t := range tm.Tasks {
 		if t.Hash == taskHash {
-			log.Infof("Checking task: %v against %s\n", t, taskHash)
+			logger.Infof("checking task: %v against %s", t, taskHash)
 			tm.Cron.Remove(id)
 			delete(tm.Tasks, id)
-			log.Infof("removed task with hash %s from cron", taskHash)
+			logger.Infof("removed task with hash %s from cron", taskHash)
 			return nil
 		}
 	}
 
-	log.Infof("task with hash %s not found in cron", taskHash)
+	logger.Infof("task with hash %s not found in cron", taskHash)
 	return fmt.Errorf("task with hash %s not found in cron", taskHash)
 }

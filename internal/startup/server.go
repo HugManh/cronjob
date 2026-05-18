@@ -3,13 +3,13 @@ package startup
 import (
 	"fmt"
 
-	log "github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 
 	"github.com/HugManh/cronjob/configs"
 	"github.com/HugManh/cronjob/internal/routing"
 	"github.com/HugManh/cronjob/internal/service"
 	"github.com/HugManh/cronjob/pkg/database/postgres"
+	"github.com/HugManh/cronjob/pkg/logger"
 )
 
 type Shutdown = func()
@@ -32,7 +32,7 @@ func create(cfg *configs.Config) (routing.Router, Shutdown) {
 	// Init Database
 	db, err := createDatabase(cfg)
 	if err != nil {
-		log.Fatalf("Database connection failed: %v", err)
+		logger.Fatalf("database connection failed: %v", err)
 	}
 
 	// Init TaskManager
@@ -40,9 +40,9 @@ func create(cfg *configs.Config) (routing.Router, Shutdown) {
 	tm.Cron.Start()
 
 	// Register tasks from DB
-	log.Info("Loading tasks from database...")
+	logger.Info("loading tasks from database...")
 	if err := tm.Startup(db.DB()); err != nil {
-		log.Fatalf("Registering tasks from DB failed: %v", err)
+		logger.Fatalf("registering tasks from DB failed: %v", err)
 	}
 
 	router := routing.NewRouter(ginMode(cfg.Env))
