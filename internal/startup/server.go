@@ -1,47 +1,38 @@
 package startup
 
 import (
+	"fmt"
+
 	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 
 	"github.com/HugManh/cronjob/configs"
 	"github.com/HugManh/cronjob/internal/routing"
 	"github.com/HugManh/cronjob/internal/service"
-	"github.com/HugManh/cronjob/pkg/db/postgres"
+	"github.com/HugManh/cronjob/pkg/database/postgres"
 )
 
 type Shutdown = func()
 
-var migrate = false
+type databaseClient interface {
+	DB() *gorm.DB
+	Close() error
+}
 
 func Server() {
-	config := configs.LoadConfig()
-	router, shutdown := create(config)
+	cfg := configs.Load()
+	router, shutdown := create(cfg)
 	defer shutdown()
-	router.Start(config.ServerHost, config.ServerPort)
+	router.Start(cfg.ServerHost, cfg.ServerPort)
 
 }
 
 func create(cfg *configs.Config) (routing.Router, Shutdown) {
 
 	// Init Database
-	config := postgres.Config{
-		Host:     cfg.DBHost,
-		Port:     cfg.DBPort,
-		User:     cfg.DBUser,
-		Password: cfg.DBPass,
-		DBName:   cfg.DBName,
-		SSLMode:  "disable", // or "require" based on your needs
-	}
-
-	db, err := postgres.NewDatabase(config)
+	db, err := createDatabase(cfg)
 	if err != nil {
 		log.Fatalf("Database connection failed: %v", err)
-	}
-
-	if migrate {
-		if err := db.Migrate(); err != nil {
-			log.Fatalf("Database migration failed: %v", err)
-		}
 	}
 
 	// Init TaskManager
@@ -54,13 +45,38 @@ func create(cfg *configs.Config) (routing.Router, Shutdown) {
 		log.Fatalf("Registering tasks from DB failed: %v", err)
 	}
 
-	router := routing.NewRouter("debug")
+	router := routing.NewRouter(ginMode(cfg.Env))
 	router.LoadControllers(db.DB(), tm)
 
 	shutdown := func() {
-		db.Disconnect()
+		db.Close()
 		tm.Cron.Stop()
 	}
 
 	return router, shutdown
+}
+
+func createDatabase(cfg *configs.Config) (databaseClient, error) {
+	switch cfg.DBEngine {
+	case "postgres", "supabase":
+		return postgres.Open(postgres.Config{
+			Host:     cfg.DBHost,
+			Port:     cfg.DBPort,
+			User:     cfg.DBUser,
+			Password: cfg.DBPass,
+			DBName:   cfg.DBName,
+			SSLMode:  cfg.DBSSLMode,
+		})
+	case "mysql":
+		return nil, fmt.Errorf("database engine %q is configured but no MySQL driver is implemented", cfg.DBEngine)
+	default:
+		return nil, fmt.Errorf("unsupported database engine %q", cfg.DBEngine)
+	}
+}
+
+func ginMode(env string) string {
+	if env == "production" {
+		return "release"
+	}
+	return "debug"
 }

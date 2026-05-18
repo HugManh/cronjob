@@ -13,7 +13,7 @@ import (
 
 	"github.com/HugManh/cronjob/internal/repository"
 	"github.com/HugManh/cronjob/internal/service"
-	"github.com/HugManh/cronjob/pkg/https"
+	"github.com/HugManh/cronjob/pkg/httpx"
 )
 
 var views = jet.NewSet(
@@ -31,10 +31,10 @@ func Init() {
 
 // Render HTML views
 func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *service.TaskManager) {
-	repo := repository.NewTaskRepo(db)
-	svc := service.NewService2(repo, tm)
-	repo1 := repository.NewSlackRepo(db)
-	svc1 := service.NewService1(repo1)
+	taskRepo := repository.NewTaskRepository(db)
+	taskService := service.NewTaskService(taskRepo, tm)
+	slackRepo := repository.NewSlackRepository(db)
+	slackService := service.NewSlackService(slackRepo)
 
 	tasks := rg.Group("/tasks")
 	tasks.GET("/", func(c *gin.Context) {
@@ -50,8 +50,8 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *service.TaskManager) {
 		}
 	})
 	tasks.GET("/items", func(c *gin.Context) {
-		params := https.ParseQueryParams(c)
-		tasks, _, err := svc.GetTasks(params)
+		params := httpx.ParseQueryParams(c)
+		tasks, _, err := taskService.GetTasks(params)
 		if err != nil {
 			c.String(http.StatusNotFound, "tasks not found: %v", err)
 			return
@@ -82,7 +82,7 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *service.TaskManager) {
 	})
 	tasks.GET("/:id", func(c *gin.Context) {
 		id := c.Param("id")
-		task, err := svc.GetTaskById(id)
+		task, err := taskService.GetTaskByID(id)
 		if err != nil {
 			c.String(http.StatusNotFound, "task not found: %v", err)
 			return
@@ -111,18 +111,17 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *service.TaskManager) {
 			return
 		}
 
-		err = tmpl.Execute(c.Writer, nil, nil)
-		fmt.Printf("render error: %v", err)
+		if err := tmpl.Execute(c.Writer, nil, nil); err != nil {
+			c.String(http.StatusInternalServerError, fmt.Sprintf("render error: %v", err))
+		}
 	})
 	slacks.GET("/items", func(c *gin.Context) {
-		params := https.ParseQueryParams(c)
-		slacks, _, err := svc1.GetSlacks(params)
+		params := httpx.ParseQueryParams(c)
+		slacks, _, err := slackService.GetSlacks(params)
 		if err != nil {
 			c.String(http.StatusNotFound, "slacks not found: %v", err)
 			return
 		}
-
-		fmt.Printf("---------- %+v", slacks)
 
 		tmpl, err := views.GetTemplate("slacks/items")
 		if err != nil {
@@ -133,8 +132,9 @@ func RegisterRoutes(rg *gin.RouterGroup, db *gorm.DB, tm *service.TaskManager) {
 		vars := make(jet.VarMap)
 		vars.Set("slacks", slacks)
 
-		err = tmpl.Execute(c.Writer, vars, slacks)
-		fmt.Printf("render error: %v", err)
+		if err := tmpl.Execute(c.Writer, vars, slacks); err != nil {
+			c.String(http.StatusInternalServerError, fmt.Sprintf("render error: %v", err))
+		}
 	})
 
 }

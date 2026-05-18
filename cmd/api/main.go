@@ -1,16 +1,20 @@
 package main
 
 import (
-	"github.com/joho/godotenv"
-
+	"github.com/HugManh/cronjob/configs"
 	"github.com/HugManh/cronjob/internal/startup"
 	"github.com/HugManh/cronjob/pkg/logger"
 )
 
 func init() {
-	// Initialize logger
-	godotenv.Load()
-	logger.NewLogger()
+	cfg := configs.Load()
+	if err := logger.Configure(logger.Config{
+		ServiceName: cfg.ServiceName,
+		Level:       cfg.LogLevel,
+		Directory:   cfg.LogDir,
+	}); err != nil {
+		panic(err)
+	}
 }
 
 func main() {

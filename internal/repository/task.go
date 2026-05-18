@@ -4,22 +4,22 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/HugManh/cronjob/internal/model"
-	"github.com/HugManh/cronjob/pkg/https"
+	"github.com/HugManh/cronjob/pkg/httpx"
 )
 
-type TaskRepo struct {
+type TaskRepository struct {
 	db *gorm.DB
 }
 
-func NewTaskRepo(db *gorm.DB) *TaskRepo {
-	return &TaskRepo{db}
+func NewTaskRepository(db *gorm.DB) *TaskRepository {
+	return &TaskRepository{db}
 }
 
-func (r *TaskRepo) Create(task *model.Task) error {
+func (r *TaskRepository) Create(task *model.Task) error {
 	return r.db.Create(task).Error
 }
 
-func (r *TaskRepo) GetAll(params https.QueryParams) ([]model.Task, int64, error) {
+func (r *TaskRepository) GetAll(params httpx.QueryParams) ([]model.Task, int64, error) {
 	var tasks []model.Task
 	var total int64
 	offset := (params.Page - 1) * params.Limit
@@ -35,7 +35,7 @@ func (r *TaskRepo) GetAll(params https.QueryParams) ([]model.Task, int64, error)
 	return tasks, total, err
 }
 
-func (r *TaskRepo) GetByID(id string) (*model.Task, error) {
+func (r *TaskRepository) GetByID(id string) (*model.Task, error) {
 	var task model.Task
 	if err := r.db.Where("id = ?", id).First(&task).Error; err != nil {
 		return nil, err
@@ -43,19 +43,19 @@ func (r *TaskRepo) GetByID(id string) (*model.Task, error) {
 	return &task, nil
 }
 
-func (r *TaskRepo) GetTaskByActive(isActive bool) ([]model.Task, error) {
+func (r *TaskRepository) GetByActive(isActive bool) ([]model.Task, error) {
 	var tasks []model.Task
-	err := r.db.Where("active = ?", true).Find(&tasks).Error
+	err := r.db.Where("active = ?", isActive).Find(&tasks).Error
 	return tasks, err
 }
 
-func (r *TaskRepo) Update(task *model.Task) error {
+func (r *TaskRepository) Update(task *model.Task) error {
 	return r.db.Model(&model.Task{}).
 		Where("id = ?", task.ID).
 		Select("Name", "Execute", "Message", "Hash", "Active", "Code").
 		Updates(task).Error
 }
 
-func (r *TaskRepo) Delete(id string) error {
+func (r *TaskRepository) Delete(id string) error {
 	return r.db.Delete(&model.Task{}, id).Error
 }

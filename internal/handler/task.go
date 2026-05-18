@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	dto_tasks "github.com/HugManh/cronjob/internal/dto/tasks"
+	taskdto "github.com/HugManh/cronjob/internal/dto/tasks"
 	"github.com/HugManh/cronjob/internal/service"
-	"github.com/HugManh/cronjob/pkg/https"
+	"github.com/HugManh/cronjob/pkg/httpx"
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,7 +20,7 @@ func NewTaskHandler(svcTask *service.TaskService, svcSlack *service.SlackService
 }
 
 func (h *TaskHandler) Create(c *gin.Context) {
-	var req dto_tasks.AddTaskRequest
+	var req taskdto.CreateTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"success": false,
@@ -30,17 +30,17 @@ func (h *TaskHandler) Create(c *gin.Context) {
 		return
 	}
 
-	id, err := h.svcTask.AddTask(req.Name, req.Execute, req.Message)
+	task, err := h.svcTask.AddTask(req.Name, req.Execute, req.Message)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "task added", "id": id})
+	c.JSON(http.StatusCreated, gin.H{"message": "task added", "data": task})
 }
 
 func (h *TaskHandler) GetTasks(c *gin.Context) {
-	params := https.ParseQueryParams(c)
+	params := httpx.ParseQueryParams(c)
 	tasks, total, err := h.svcTask.GetTasks(params)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "tasks not found"})
@@ -55,9 +55,9 @@ func (h *TaskHandler) GetTasks(c *gin.Context) {
 	})
 }
 
-func (h *TaskHandler) GetTaskById(c *gin.Context) {
+func (h *TaskHandler) GetTaskByID(c *gin.Context) {
 	id := c.Param("id")
-	task, err := h.svcTask.GetTaskById(id)
+	task, err := h.svcTask.GetTaskByID(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "task not found"})
 		return
@@ -67,7 +67,7 @@ func (h *TaskHandler) GetTaskById(c *gin.Context) {
 
 func (h *TaskHandler) GetTaskLogs(c *gin.Context) {
 	id := c.Param("id")
-	task, err := h.svcTask.GetTaskById(id)
+	task, err := h.svcTask.GetTaskByID(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "task not found"})
 		return
@@ -78,12 +78,24 @@ func (h *TaskHandler) GetTaskLogs(c *gin.Context) {
 
 func (h *TaskHandler) Update(c *gin.Context) {
 	id := c.Param("id")
-	var req dto_tasks.AddTaskRequest
+	var req taskdto.CreateTaskRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
 		return
 	}
-	if err := h.svcTask.UpdateTask(id, req.Name, req.Execute, req.Message, bool(*req.Active)); err != nil {
+
+	task, err := h.svcTask.GetTaskByID(id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "task not found"})
+		return
+	}
+
+	active := task.Active
+	if req.Active != nil {
+		active = bool(*req.Active)
+	}
+
+	if err := h.svcTask.UpdateTask(id, req.Name, req.Execute, req.Message, active); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

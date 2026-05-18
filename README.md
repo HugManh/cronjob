@@ -101,8 +101,8 @@ All configuration is done via environment variables (loaded from `.env`):
 | `DB_PORT` | PostgreSQL port | `5432` |
 | `DB_USER` | Database username | `postgres` |
 | `DB_PASSWORD` | Database password | *(required)* |
-| `DB_DATABASE` | Database name | `postgres` |
-| `DB_SSL` | Enable SSL for DB connection | `false` |
+| `DB_NAME` | Database name | `postgres` |
+| `DB_SSLMODE` | PostgreSQL SSL mode (`disable`, `require`) | `disable` |
 
 ---
 

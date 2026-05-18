@@ -1,4 +1,4 @@
-package dto_slack
+package slack
 
 import (
 	validation "github.com/go-ozzo/ozzo-validation/v4"

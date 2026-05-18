@@ -1,22 +1,22 @@
 package service
 
 import (
-	dto_slack "github.com/HugManh/cronjob/internal/dto/slack"
+	slackdto "github.com/HugManh/cronjob/internal/dto/slack"
 	"github.com/HugManh/cronjob/internal/model"
 	"github.com/HugManh/cronjob/internal/repository"
-	"github.com/HugManh/cronjob/pkg/https"
+	"github.com/HugManh/cronjob/pkg/httpx"
 )
 
 type SlackService struct {
-	repo *repository.SlackRepo
+	repo *repository.SlackRepository
 }
 
-func NewService1(r *repository.SlackRepo) *SlackService {
+func NewSlackService(r *repository.SlackRepository) *SlackService {
 	return &SlackService{repo: r}
 }
 
-// AddSlack adds a new task to the cron scheduler and saves it to the database
-func (s *SlackService) CreateSlack(req dto_slack.CreateSlackRequest) error {
+// CreateSlack validates and stores a Slack configuration.
+func (s *SlackService) CreateSlack(req slackdto.CreateSlackRequest) error {
 	if err := req.Validate(); err != nil {
 		return err
 	}
@@ -33,10 +33,10 @@ func (s *SlackService) CreateSlack(req dto_slack.CreateSlackRequest) error {
 	return nil
 }
 
-func (s *SlackService) GetSlacks(params https.QueryParams) ([]model.Slack, int64, error) {
+func (s *SlackService) GetSlacks(params httpx.QueryParams) ([]model.Slack, int64, error) {
 	return s.repo.GetAll(params)
 }
 
-func (s *SlackService) GetSlackById(id string) (*model.Slack, error) {
+func (s *SlackService) GetSlackByID(id string) (*model.Slack, error) {
 	return s.repo.GetByID(id)
 }

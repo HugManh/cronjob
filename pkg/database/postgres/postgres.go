@@ -3,15 +3,13 @@ package postgres
 import (
 	"fmt"
 
-	"github.com/HugManh/cronjob/internal/model"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type IDatabase interface {
+type Database interface {
 	DB() *gorm.DB
-	Migrate() error
-	Disconnect() error
+	Close() error
 }
 
 type Config struct {
@@ -20,17 +18,22 @@ type Config struct {
 	User     string
 	Password string
 	DBName   string
-	SSLMode  string // "disable", "require", etc.
+	SSLMode  string
 }
 
 type database struct {
-	Client *gorm.DB
+	client *gorm.DB
 }
 
-func NewDatabase(config Config) (IDatabase, error) {
+func Open(config Config) (Database, error) {
 	dsn := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		config.Host, config.Port, config.User, config.Password, config.DBName, config.SSLMode,
+		config.Host,
+		config.Port,
+		config.User,
+		config.Password,
+		config.DBName,
+		config.SSLMode,
 	)
 
 	client, err := gorm.Open(postgres.New(postgres.Config{
@@ -42,20 +45,16 @@ func NewDatabase(config Config) (IDatabase, error) {
 	}
 
 	return &database{
-		Client: client,
+		client: client,
 	}, nil
 }
 
 func (db *database) DB() *gorm.DB {
-	return db.Client
+	return db.client
 }
 
-func (db *database) Migrate() error {
-	return db.Client.AutoMigrate(&model.Task{}, &model.Slack{})
-}
-
-func (db *database) Disconnect() error {
-	sqlDB, err := db.Client.DB()
+func (db *database) Close() error {
+	sqlDB, err := db.client.DB()
 	if err != nil {
 		return err
 	}

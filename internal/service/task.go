@@ -7,23 +7,21 @@ import (
 
 	"github.com/HugManh/cronjob/internal/model"
 	"github.com/HugManh/cronjob/internal/repository"
-	"github.com/HugManh/cronjob/pkg/https"
+	"github.com/HugManh/cronjob/pkg/httpx"
 	"github.com/google/uuid"
-	"github.com/robfig/cron/v3"
 )
 
 type TaskService struct {
-	repo *repository.TaskRepo
+	repo *repository.TaskRepository
 	tm   *TaskManager
 }
 
-func NewService2(r *repository.TaskRepo, tm *TaskManager) *TaskService {
+func NewTaskService(r *repository.TaskRepository, tm *TaskManager) *TaskService {
 	return &TaskService{repo: r, tm: tm}
 }
 
-// AddTask adds a new task to the cron scheduler and saves it to the database
-func (s *TaskService) AddTask(name, execute, message string) (cron.EntryID, error) {
-	// Đăng ký task
+// AddTask creates a task, registers it with cron, and returns the persisted task.
+func (s *TaskService) AddTask(name, execute, message string) (*model.Task, error) {
 	hash := uuid.New().String()
 	task := model.Task{
 		Name:    name,
@@ -33,22 +31,24 @@ func (s *TaskService) AddTask(name, execute, message string) (cron.EntryID, erro
 		Active:  true,
 	}
 	if err := s.repo.Create(&task); err != nil {
-		return 0, fmt.Errorf("failed to create task in DB: %+v", err)
+		return nil, fmt.Errorf("failed to create task in DB: %+v", err)
 	}
 
-	id, err := s.tm.RegisterTask(hash, name, execute, message)
-	if err != nil {
-		return 0, fmt.Errorf("failed to register task in cron: %+v", err)
+	if _, err := s.tm.RegisterTask(hash, name, execute, message); err != nil {
+		if deleteErr := s.repo.Delete(fmt.Sprint(task.ID)); deleteErr != nil {
+			log.Warnf("failed to rollback task %d after cron registration error: %v", task.ID, deleteErr)
+		}
+		return nil, fmt.Errorf("failed to register task in cron: %+v", err)
 	}
 
-	return id, nil
+	return &task, nil
 }
 
-func (s *TaskService) GetTasks(params https.QueryParams) ([]model.Task, int64, error) {
+func (s *TaskService) GetTasks(params httpx.QueryParams) ([]model.Task, int64, error) {
 	return s.repo.GetAll(params)
 }
 
-func (s *TaskService) GetTaskById(id string) (*model.Task, error) {
+func (s *TaskService) GetTaskByID(id string) (*model.Task, error) {
 	return s.repo.GetByID(id)
 }
 
@@ -68,19 +68,15 @@ func (s *TaskService) SetTaskActiveStatus(id string, active bool) error {
 	}
 
 	if active {
-		// Thêm lại vào cron
-		entryID, err := s.tm.RegisterTask(task.Hash, task.Name, task.Execute, task.Message)
-		if err != nil {
-			return fmt.Errorf("failed to execute task: %v", err)
+		if _, err := s.tm.RegisterTask(task.Hash, task.Name, task.Execute, task.Message); err != nil {
+			return fmt.Errorf("failed to register task in cron: %v", err)
 		}
-		s.tm.Tasks[entryID] = Task{Hash: task.Hash}
 	} else {
 		if err := s.tm.RemoveTaskFromCronByHash(task.Hash); err != nil {
 			log.Warnf("failed to remove task: %v", err)
 		}
 	}
 
-	// Cập nhật DB: đặt active
 	task.Active = active
 	if err := s.repo.Update(task); err != nil {
 		return err
@@ -100,25 +96,35 @@ func (s *TaskService) UpdateTask(id string, name, execute, message string, activ
 		return fmt.Errorf("task with id %s not found: %v", id, err)
 	}
 
-	// Nếu không có thay đổi, không làm gì
 	if task.Name == name && task.Execute == execute && task.Message == message && task.Active == active {
 		return nil
 	}
 
-	if task.Active {
+	wasActive := task.Active
+	if wasActive {
 		if err := s.tm.RemoveTaskFromCronByHash(task.Hash); err != nil {
 			log.Warnf("failed to remove task: %v", err)
 		}
 	}
 
-	// Cập nhật DB
 	task.Name = name
 	task.Execute = execute
 	task.Message = message
 	task.Active = active
 	task.Code = ""
 	if err := s.repo.Update(task); err != nil {
+		if wasActive {
+			if _, registerErr := s.tm.RegisterTask(task.Hash, task.Name, task.Execute, task.Message); registerErr != nil {
+				log.Warnf("failed to restore cron task after update error: %v", registerErr)
+			}
+		}
 		return fmt.Errorf("failed to update task in DB: %v", err)
+	}
+
+	if task.Active {
+		if _, err := s.tm.RegisterTask(task.Hash, name, execute, message); err != nil {
+			return fmt.Errorf("failed to re-register updated task in cron: %v", err)
+		}
 	}
 
 	statusStr := "ACTIVE"
@@ -126,15 +132,7 @@ func (s *TaskService) UpdateTask(id string, name, execute, message string, activ
 		statusStr = "INACTIVE"
 	}
 	s.tm.AddLog(task.Hash, fmt.Sprintf("System: Task is now %s", statusStr))
-
-	// Đăng ký lại vào cron nếu đang active
-	if task.Active {
-		if _, err := s.tm.RegisterTask(task.Hash, name, execute, message); err != nil {
-			return fmt.Errorf("failed to re-register updated task in cron: %v", err)
-		}
-	}
-
-	log.Printf("✅ Updated task: %s", name)
+	log.Printf("updated task: %s", name)
 	return nil
 }
 

@@ -73,7 +73,7 @@ func (tm *TaskManager) GetLogs(hash string) []LogEntry {
 	return result
 }
 
-const invalid_task = "000001"
+const invalidTaskCode = "000001"
 
 func (tm *TaskManager) Startup(db *gorm.DB) error {
 	var tasks []model.Task
@@ -91,7 +91,7 @@ func (tm *TaskManager) Startup(db *gorm.DB) error {
 				Where("id = ?", t.ID).
 				Updates(map[string]interface{}{
 					"active": false,
-					"code":   invalid_task,
+					"code":   invalidTaskCode,
 				}).Error; err != nil {
 				log.Errorf("Failed to update task %s to inactive: %v", t.Name, err)
 			}
@@ -130,7 +130,7 @@ func (tm *TaskManager) RegisterTask(hash, name, execute, message string) (cron.E
 		Message: message,
 	}
 
-	log.Infof("✅ Registered task: %s | %s", name, execute)
+	log.Infof("registered task: %s | %s", name, execute)
 	return id, nil
 }
 
@@ -144,11 +144,11 @@ func (tm *TaskManager) RemoveTaskFromCronByHash(taskHash string) error {
 			log.Infof("Checking task: %v against %s\n", t, taskHash)
 			tm.Cron.Remove(id)
 			delete(tm.Tasks, id)
-			log.Infof("✅ Removed task with hash %s from cron", taskHash)
+			log.Infof("removed task with hash %s from cron", taskHash)
 			return nil
 		}
 	}
 
-	log.Infof("⚠️ Task with hash %s not found in cron", taskHash)
+	log.Infof("task with hash %s not found in cron", taskHash)
 	return fmt.Errorf("task with hash %s not found in cron", taskHash)
 }
